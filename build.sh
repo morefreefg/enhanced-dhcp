@@ -99,6 +99,29 @@ echo "📁 Copying source files..."
 mkdir -p "$BUILD_DIR/data"
 cp -r "$SRC_DIR/files/"* "$BUILD_DIR/data/"
 
+# Ensure ACL permissions are included
+echo "🔐 Adding ACL permissions..."
+mkdir -p "$BUILD_DIR/data/usr/share/rpcd/acl.d"
+if [ -f "$SRC_DIR/files/usr/share/rpcd/acl.d/luci-app-enhanced-dhcp.json" ]; then
+    cp "$SRC_DIR/files/usr/share/rpcd/acl.d/luci-app-enhanced-dhcp.json" "$BUILD_DIR/data/usr/share/rpcd/acl.d/"
+    echo "✅ ACL permissions added"
+else
+    echo "⚠️  ACL file not found, creating default"
+    cat > "$BUILD_DIR/data/usr/share/rpcd/acl.d/luci-app-enhanced-dhcp.json" <<'ACLEOF'
+{
+	"luci-app-enhanced-dhcp": {
+		"description": "Grant access to Enhanced DHCP",
+		"read": {
+			"uci": [ "enhanced_dhcp", "dhcp" ]
+		},
+		"write": {
+			"uci": [ "enhanced_dhcp", "dhcp" ]
+		}
+	}
+}
+ACLEOF
+fi
+
 # Set correct permissions
 echo "🔐 Setting file permissions..."
 find "$BUILD_DIR/data" -type d -exec chmod 755 {} \;

@@ -1,0 +1,11 @@
+{
+	"luci-app-enhanced-dhcp": {
+		"description": "Grant access to Enhanced DHCP",
+		"read": {
+			"uci": [ "enhanced_dhcp", "dhcp" ]
+		},
+		"write": {
+			"uci": [ "enhanced_dhcp", "dhcp" ]
+		}
+	}
+}
