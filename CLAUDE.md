@@ -11,6 +11,30 @@ This is a LuCI application for OpenWrt that provides enhanced DHCP management fu
 
 ## Build and Deployment Workflow
 
+### 🚀 Release Process
+**发布流程:**
+1. **打 tag**: `git tag -a v1.0.x -m "Release description"`
+2. **发 release**: `gh release create v1.0.x --title "Title" --notes "Description" package.ipk`
+
+**完整发布命令示例:**
+```bash
+# 1. 提交代码
+git add . && git commit -m "Release message"
+git push origin main
+
+# 2. 创建标签
+git tag -a v1.0.1 -m "Release v1.0.1: Description"
+git push origin v1.0.1
+
+# 3. 创建GitHub Release
+gh release create v1.0.1 \
+  --title "Enhanced DHCP Manager v1.0.1" \
+  --notes "Release description" \
+  output/luci-app-enhanced-dhcp_1.0.0-1_all.ipk \
+  output/COMPATIBILITY_ADVANCED.md \
+  output/test-install.sh
+```
+
 ### 🔧 Complete Build-Deploy-Test Command
 ```bash
 # One-command deployment (builds, deploys, tests)
