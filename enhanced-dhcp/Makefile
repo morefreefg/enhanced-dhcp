@@ -50,13 +50,17 @@ endef
 
 define Package/luci-app-enhanced-dhcp/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
-	$(INSTALL_DATA) ./files/usr/lib/lua/luci/controller/dhcp_manager/*.lua $(1)/usr/lib/lua/luci/controller/
+	$(INSTALL_DATA) ./files/usr/lib/lua/luci/controller/enhanced_dhcp.lua $(1)/usr/lib/lua/luci/controller/
 	
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi
-	$(INSTALL_DATA) ./files/usr/lib/lua/luci/model/cbi/dhcp_manager/*.lua $(1)/usr/lib/lua/luci/model/cbi/
+	$(INSTALL_DATA) ./files/usr/lib/lua/luci/model/cbi/enhanced_dhcp_devices.lua $(1)/usr/lib/lua/luci/model/cbi/
+	$(INSTALL_DATA) ./files/usr/lib/lua/luci/model/cbi/enhanced_dhcp_tags.lua $(1)/usr/lib/lua/luci/model/cbi/
 	
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
-	$(INSTALL_DATA) ./files/usr/lib/lua/luci/view/dhcp_manager/*.htm $(1)/usr/lib/lua/luci/view/
+	$(INSTALL_DATA) ./files/usr/lib/lua/luci/view/enhanced_dhcp_device_discovery.htm $(1)/usr/lib/lua/luci/view/
+	$(INSTALL_DATA) ./files/usr/lib/lua/luci/view/enhanced_dhcp_devices_js.htm $(1)/usr/lib/lua/luci/view/
+	$(INSTALL_DATA) ./files/usr/lib/lua/luci/view/enhanced_dhcp_overview.htm $(1)/usr/lib/lua/luci/view/
+	$(INSTALL_DATA) ./files/usr/lib/lua/luci/view/enhanced_dhcp_quick_assign.htm $(1)/usr/lib/lua/luci/view/
 	
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) ./files/etc/config/enhanced_dhcp $(1)/etc/config/

@@ -51,9 +51,9 @@ check_device() {
 build_package() {
     log_info "Building Enhanced DHCP IPK package..."
     
-    if [ -f "./build-optimized.sh" ]; then
-        chmod +x ./build-optimized.sh
-        ./build-optimized.sh
+    if [ -f "./build.sh" ]; then
+        chmod +x ./build.sh
+        ./build.sh
         
         if [ -f "$LOCAL_IPK_PATH" ]; then
             local size=$(ls -lh "$LOCAL_IPK_PATH" | awk '{print $5}')
