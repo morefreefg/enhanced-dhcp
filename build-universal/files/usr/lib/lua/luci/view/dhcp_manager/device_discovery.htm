@@ -1,0 +1,204 @@
+<%#
+Enhanced DHCP Manager - Device Discovery Template
+%>
+
+<div class="cbi-section-node">
+	<div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+		<p><%:Automatically discover devices on your network and quickly assign DHCP tags.%></p>
+		
+		<div style="margin-bottom: 10px;">
+			<input type="button" class="cbi-button cbi-button-action" id="btn-discover" 
+				value="<%:Discover Devices%>" onclick="discoverDevices()" />
+			<input type="button" class="cbi-button cbi-button-neutral" id="btn-refresh-leases" 
+				value="<%:Refresh DHCP Leases%>" onclick="refreshLeases()" />
+		</div>
+		
+		<div id="discovery-status" style="display: none; margin-top: 10px; padding: 10px; background: #d4edda; border-radius: 3px;">
+			<span id="discovery-message"><%:Discovering devices...%></span>
+		</div>
+	</div>
+	
+	<!-- Discovered devices table -->
+	<div id="discovered-devices" style="display: none;">
+		<h4><%:Discovered Devices%></h4>
+		<div class="table cbi-section-table" id="discovery-table">
+			<div class="tr cbi-section-table-titles">
+				<div class="th cbi-section-table-cell"><%:Device Name%></div>
+				<div class="th cbi-section-table-cell"><%:MAC Address%></div>
+				<div class="th cbi-section-table-cell"><%:IP Address%></div>
+				<div class="th cbi-section-table-cell"><%:Status%></div>
+				<div class="th cbi-section-table-cell"><%:DHCP Tag%></div>
+				<div class="th cbi-section-table-cell"><%:Action%></div>
+			</div>
+			<!-- Devices will be populated by JavaScript -->
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+function discoverDevices() {
+	var btn = document.getElementById('btn-discover');
+	var status = document.getElementById('discovery-status');
+	var message = document.getElementById('discovery-message');
+	var devicesDiv = document.getElementById('discovered-devices');
+	
+	btn.disabled = true;
+	btn.value = '<%:Discovering...%>';
+	status.style.display = 'block';
+	message.textContent = '<%:Scanning network for devices...%>';
+	
+	// Make AJAX request to get devices
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', '<%=url("admin/network/enhanced_dhcp/ajax_get_devices")%>', true);
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState === 4) {
+			btn.disabled = false;
+			btn.value = '<%:Discover Devices%>';
+			
+			if (xhr.status === 200) {
+				try {
+					var response = JSON.parse(xhr.responseText);
+					if (response.success) {
+						displayDiscoveredDevices(response.data);
+						message.textContent = '<%:Discovery complete. Found %> ' + response.data.length + ' <%: devices.%>';
+					} else {
+						message.textContent = '<%:Error: %>' + response.message;
+						status.style.background = '#f8d7da';
+					}
+				} catch (e) {
+					message.textContent = '<%:Error parsing response%>';
+					status.style.background = '#f8d7da';
+				}
+			} else {
+				message.textContent = '<%:Network error occurred%>';
+				status.style.background = '#f8d7da';
+			}
+		}
+	};
+	xhr.send();
+}
+
+function displayDiscoveredDevices(devices) {
+	var table = document.getElementById('discovery-table');
+	var devicesDiv = document.getElementById('discovered-devices');
+	
+	// Clear existing rows except header
+	var rows = table.querySelectorAll('.tr:not(.cbi-section-table-titles)');
+	rows.forEach(function(row) {
+		row.remove();
+	});
+	
+	// Add device rows
+	devices.forEach(function(device) {
+		var row = document.createElement('div');
+		row.className = 'tr cbi-section-table-row';
+		
+		var statusText = device.static ? '<%:Configured%>' : '<%:Discovered%>';
+		var statusColor = device.static ? '#28a745' : '#17a2b8';
+		
+		row.innerHTML = 
+			'<div class="td cbi-section-table-cell">' + device.name + '</div>' +
+			'<div class="td cbi-section-table-cell"><code>' + device.mac + '</code></div>' +
+			'<div class="td cbi-section-table-cell">' + device.ip + '</div>' +
+			'<div class="td cbi-section-table-cell"><span style="color: ' + statusColor + '">' + statusText + '</span></div>' +
+			'<div class="td cbi-section-table-cell">' + device.tag + '</div>' +
+			'<div class="td cbi-section-table-cell">' +
+				'<select id="tag-select-' + device.mac.replace(/:/g, '') + '" onchange="updateDeviceTag(\'' + device.mac + '\', this.value, \'' + device.name + '\')">' +
+					getTagOptions(device.tag) +
+				'</select>' +
+			'</div>';
+		
+		table.appendChild(row);
+	});
+	
+	devicesDiv.style.display = 'block';
+}
+
+function getTagOptions(currentTag) {
+	// This should be populated from server-side data
+	var options = '<option value="default"' + (currentTag === 'default' ? ' selected' : '') + '><%:Default%></option>';
+	
+	// Add custom tags (this would normally come from server)
+	<%
+	local uci = require "luci.model.uci".cursor()
+	uci:foreach("dhcp", "tag", function(section)
+		local tag_name = section[".name"]
+	%>
+	options += '<option value="<%=tag_name%>"' + (currentTag === '<%=tag_name%>' ? ' selected' : '') + '><%=tag_name%></option>';
+	<% end) %>
+	
+	return options;
+}
+
+function updateDeviceTag(mac, tag, name) {
+	// Make AJAX request to apply tag
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', '<%=url("admin/network/enhanced_dhcp/ajax_apply_tag")%>', true);
+	xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+	
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState === 4) {
+			if (xhr.status === 200) {
+				try {
+					var response = JSON.parse(xhr.responseText);
+					if (response.success) {
+						// Show success message
+						showMessage('<%:Tag applied successfully%>', 'success');
+					} else {
+						showMessage('<%:Error: %>' + response.message, 'error');
+					}
+				} catch (e) {
+					showMessage('<%:Error parsing response%>', 'error');
+				}
+			} else {
+				showMessage('<%:Network error occurred%>', 'error');
+			}
+		}
+	};
+	
+	var params = 'mac=' + encodeURIComponent(mac) + 
+		'&tag=' + encodeURIComponent(tag) + 
+		'&name=' + encodeURIComponent(name);
+	xhr.send(params);
+}
+
+function refreshLeases() {
+	// Refresh DHCP leases by calling discover
+	discoverDevices();
+}
+
+function showMessage(message, type) {
+	var msgDiv = document.createElement('div');
+	msgDiv.style.position = 'fixed';
+	msgDiv.style.top = '10px';
+	msgDiv.style.right = '10px';
+	msgDiv.style.padding = '10px 15px';
+	msgDiv.style.borderRadius = '5px';
+	msgDiv.style.zIndex = '9999';
+	msgDiv.style.fontSize = '14px';
+	msgDiv.textContent = message;
+	
+	if (type === 'success') {
+		msgDiv.style.background = '#d4edda';
+		msgDiv.style.color = '#155724';
+		msgDiv.style.border = '1px solid #c3e6cb';
+	} else {
+		msgDiv.style.background = '#f8d7da';
+		msgDiv.style.color = '#721c24';
+		msgDiv.style.border = '1px solid #f5c6cb';
+	}
+	
+	document.body.appendChild(msgDiv);
+	
+	setTimeout(function() {
+		document.body.removeChild(msgDiv);
+	}, 3000);
+}
+
+// Auto-refresh devices every 30 seconds
+setInterval(function() {
+	if (document.getElementById('discovered-devices').style.display !== 'none') {
+		discoverDevices();
+	}
+}, 30000);
+</script>
