@@ -1,10 +1,10 @@
 #!/bin/sh /etc/rc.common
 
+# Enhanced DHCP Manager Init Script
+# Compatible with all OpenWrt versions (19.07+)
+
 START=60
 STOP=15
-
-USE_PROCD=1
-PROG=/usr/sbin/enhanced_dhcp_daemon
 
 CONFIG_FILE="/etc/config/enhanced_dhcp"
 PID_FILE="/var/run/enhanced_dhcp.pid"
@@ -18,18 +18,19 @@ start_service() {
 	}
 	
 	# Ensure log directory exists with proper permissions
-	mkdir -p $(dirname $LOG_FILE)
-	chmod 755 $(dirname $LOG_FILE)
+	mkdir -p $(dirname $LOG_FILE) 2>/dev/null || true
+	chmod 755 $(dirname $LOG_FILE) 2>/dev/null || true
 	
 	# Create log file with restricted permissions if it doesn't exist
 	[ ! -f "$LOG_FILE" ] && {
-		touch "$LOG_FILE"
-		chmod 640 "$LOG_FILE"
+		touch "$LOG_FILE" 2>/dev/null || true
+		chmod 640 "$LOG_FILE" 2>/dev/null || true
 	}
 	
 	# Initialize enhanced DHCP settings
 	init_enhanced_dhcp
 	
+	log_message "info" "Enhanced DHCP service started"
 	echo "Enhanced DHCP service started"
 }
 
@@ -165,24 +166,24 @@ validate_dhcp_config() {
 	local error_count=0
 	
 	# Check for duplicate MAC addresses
-	local macs=$(uci show dhcp | grep "\.mac=" | cut -d"'" -f2 | sort)
-	local duplicate_macs=$(echo "$macs" | uniq -d)
+	local macs=$(uci show dhcp 2>/dev/null | grep "\.mac=" | cut -d"'" -f2 | sort 2>/dev/null || true)
+	local duplicate_macs=$(echo "$macs" | uniq -d 2>/dev/null || true)
 	
 	if [ -n "$duplicate_macs" ]; then
 		log_message "error" "Duplicate MAC addresses found: $duplicate_macs"
 		error_count=$((error_count + 1))
 	fi
 	
-	# Check for invalid tag references
+	# Check for invalid tag references (simplified for compatibility)
 	uci -q foreach dhcp host '
-		tag=$(uci -q get dhcp.$1.tag)
+		tag=$(uci -q get dhcp.$1.tag 2>/dev/null || true)
 		if [ -n "$tag" ] && [ "$tag" != "default" ]; then
 			if ! uci -q get dhcp.$tag >/dev/null 2>&1; then
 				echo "Invalid tag reference: $tag in host $1" >&2
 				error_count=$((error_count + 1))
 			fi
 		fi
-	'
+	' 2>/dev/null || true
 	
 	if [ $error_count -eq 0 ]; then
 		log_message "info" "DHCP configuration validation passed"
@@ -211,20 +212,20 @@ apply_pending_changes() {
 log_message() {
 	local level="$1"
 	local message="$2"
-	local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+	local timestamp=$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || date)
 	
 	# Check if logging is enabled
 	local logging_enabled
-	config_get logging_enabled logging enable_audit_log
+	config_get logging_enabled logging enable_audit_log 2>/dev/null || logging_enabled="1"
 	
 	if [ "$logging_enabled" = "1" ]; then
-		echo "[$timestamp] [$level] $message" >> "$LOG_FILE"
+		echo "[$timestamp] [$level] $message" >> "$LOG_FILE" 2>/dev/null || true
 		
 		# Also log to system log for important messages
 		case "$level" in
-			"error") logger -t enhanced_dhcp -p daemon.err "$message" ;;
-			"warn") logger -t enhanced_dhcp -p daemon.warning "$message" ;;
-			"info") logger -t enhanced_dhcp -p daemon.info "$message" ;;
+			"error") logger -t enhanced_dhcp -p daemon.err "$message" 2>/dev/null || true ;;
+			"warn") logger -t enhanced_dhcp -p daemon.warning "$message" 2>/dev/null || true ;;
+			"info") logger -t enhanced_dhcp -p daemon.info "$message" 2>/dev/null || true ;;
 		esac
 	fi
 	

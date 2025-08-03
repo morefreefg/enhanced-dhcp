@@ -5,7 +5,6 @@ Enhanced DHCP Manager - Overview Template
 <%-
 local sys = require "luci.sys"
 local uci = require "luci.model.uci".cursor()
-local json = require "luci.json"
 
 -- Get statistics
 local total_tags = 0
@@ -20,14 +19,30 @@ uci:foreach("dhcp", "host", function(section)
 	total_devices = total_devices + 1
 end)
 
-local leases = sys.dhcp_leases()
+-- Read DHCP leases directly from file
+local leases = {}
+local lease_file = io.open("/var/dhcp.leases", "r")
+if lease_file then
+    for line in lease_file:lines() do
+        local exp, mac, ip, name = line:match("(%d+) (%S+) (%S+) (%S*)")
+        if exp and mac and ip then
+            table.insert(leases, {
+                expires = exp,
+                macaddr = mac,
+                ipaddr = ip,
+                hostname = name ~= "*" and name or "Unknown"
+            })
+        end
+    end
+    lease_file:close()
+end
 online_devices = #leases
 -%>
 
 <%+header%>
 
 <div class="cbi-map">
-	<h2 name="content"><%:Enhanced DHCP Overview%></h2>
+	<h2><%:Enhanced DHCP Overview%></h2>
 	<div class="cbi-section-descr">
 		<%:System overview showing DHCP tag and device statistics%>
 	</div>
@@ -39,19 +54,19 @@ online_devices = #leases
 			<!-- Statistics Cards -->
 			<div style="flex: 1; margin-right: 10px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
 				<h3 style="margin-top: 0; color: #0069d9;"><%:DHCP Tags%></h3>
-				<div style="font-size: 24px; font-weight: bold;"><%=total_tags%></div>
+				<div style="font-size: 24px; font-weight: bold;"><%=tostring(total_tags)%></div>
 				<div style="color: #666; font-size: 12px;"><%:Total configured tags%></div>
 			</div>
 			
 			<div style="flex: 1; margin-right: 10px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
 				<h3 style="margin-top: 0; color: #28a745;"><%:Total Devices%></h3>
-				<div style="font-size: 24px; font-weight: bold;"><%=total_devices%></div>
+				<div style="font-size: 24px; font-weight: bold;"><%=tostring(total_devices)%></div>
 				<div style="color: #666; font-size: 12px;"><%:Configured devices%></div>
 			</div>
 			
 			<div style="flex: 1; padding: 15px; background: #f9f9f9; border-radius: 5px;">
 				<h3 style="margin-top: 0; color: #17a2b8;"><%:Online Devices%></h3>
-				<div style="font-size: 24px; font-weight: bold;"><%=online_devices%></div>
+				<div style="font-size: 24px; font-weight: bold;"><%=tostring(online_devices)%></div>
 				<div style="color: #666; font-size: 12px;"><%:Currently active%></div>
 			</div>
 		</div>
@@ -88,7 +103,7 @@ online_devices = #leases
 						if lease.expires == "0" then
 							write(translate("Static"))
 						else
-							write(lease.expires)
+							write(tostring(lease.expires))
 						end
 					else
 						write(translate("Unknown"))
@@ -142,7 +157,12 @@ online_devices = #leases
 				<div class="td cbi-section-table-cell">
 					<%
 					local default_dns = uci:get_list("dhcp", "@dnsmasq[0]", "server") or {}
-					write(table.concat(default_dns, ", ") ~= "" and table.concat(default_dns, ", ") or "Auto")
+					local dns_str = table.concat(default_dns, ", ")
+					if dns_str ~= "" then
+						write(dns_str)
+					else
+						write("Auto")
+					end
 					%>
 				</div>
 				<div class="td cbi-section-table-cell">
@@ -153,7 +173,7 @@ online_devices = #leases
 							default_count = default_count + 1
 						end
 					end)
-					write(default_count)
+					write(tostring(default_count))
 					%>
 				</div>
 			</div>
@@ -186,7 +206,7 @@ online_devices = #leases
 				<div class="td cbi-section-table-cell"><%=tag_name%></div>
 				<div class="td cbi-section-table-cell"><%=gateway ~= "" and gateway or translate("Not set")%></div>
 				<div class="td cbi-section-table-cell"><%=dns_servers ~= "" and dns_servers or translate("Not set")%></div>
-				<div class="td cbi-section-table-cell"><%=device_count%></div>
+				<div class="td cbi-section-table-cell"><%=tostring(device_count)%></div>
 			</div>
 			<% end) %>
 		</div>

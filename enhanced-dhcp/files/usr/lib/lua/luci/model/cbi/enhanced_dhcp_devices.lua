@@ -1,6 +1,6 @@
 local sys = require "luci.sys"
 local uci = require "luci.model.uci".cursor()
-local json = require "luci.json"
+local json = require "luci.jsonc"
 
 -- Create map for DHCP configuration
 m = Map("dhcp", translate("Device Management"), 
@@ -8,11 +8,11 @@ m = Map("dhcp", translate("Device Management"),
 		"Devices can be assigned different DHCP option templates to receive specific network settings."))
 
 -- Add JavaScript for dynamic functionality
-m:append(Template("dhcp_manager/devices_js"))
+m:append(Template("enhanced_dhcp_devices_js"))
 
 -- Auto-discovery section
 s1 = m:section(SimpleSection, translate("Device Discovery"))
-s1.template = "dhcp_manager/device_discovery"
+s1.template = "enhanced_dhcp_device_discovery"
 
 -- Manual device addition section
 s2 = m:section(TypedSection, "host", translate("Device Configuration"))
@@ -107,7 +107,23 @@ current_ip.width = "12%"
 function current_ip.cfgvalue(self, section)
 	local device_mac = uci:get("dhcp", section, "mac")
 	if device_mac then
-		local leases = sys.dhcp_leases()
+		-- Read DHCP leases directly
+		local leases = {}
+		local lease_file = io.open("/var/dhcp.leases", "r")
+		if lease_file then
+			for line in lease_file:lines() do
+				local exp, mac, ip, name = line:match("(%d+) (%S+) (%S+) (%S*)")
+				if exp and mac and ip then
+					table.insert(leases, {
+						expires = exp,
+						macaddr = mac,
+						ipaddr = ip,
+						hostname = name ~= "*" and name or "Unknown"
+					})
+				end
+			end
+			lease_file:close()
+		end
 		for _, lease in ipairs(leases) do
 			if lease.macaddr and lease.macaddr:lower() == device_mac:lower() then
 				return lease.ipaddr or translate("Offline")
@@ -124,7 +140,23 @@ status.width = "10%"
 function status.cfgvalue(self, section)
 	local device_mac = uci:get("dhcp", section, "mac")
 	if device_mac then
-		local leases = sys.dhcp_leases()
+		-- Read DHCP leases directly
+		local leases = {}
+		local lease_file = io.open("/var/dhcp.leases", "r")
+		if lease_file then
+			for line in lease_file:lines() do
+				local exp, mac, ip, name = line:match("(%d+) (%S+) (%S+) (%S*)")
+				if exp and mac and ip then
+					table.insert(leases, {
+						expires = exp,
+						macaddr = mac,
+						ipaddr = ip,
+						hostname = name ~= "*" and name or "Unknown"
+					})
+				end
+			end
+			lease_file:close()
+		end
 		for _, lease in ipairs(leases) do
 			if lease.macaddr and lease.macaddr:lower() == device_mac:lower() then
 				return translate("Online")
@@ -168,7 +200,7 @@ end
 
 -- Add quick assignment section
 s3 = m:section(SimpleSection, translate("Quick Device Assignment"))
-s3.template = "dhcp_manager/quick_assign"
+s3.template = "enhanced_dhcp_quick_assign"
 
 -- Custom validate function to check MAC address format
 function m.save(self)

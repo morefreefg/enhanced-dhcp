@@ -1,11 +1,13 @@
-module("luci.controller.dhcp_manager.main", package.seeall)
+module("luci.controller.enhanced_dhcp", package.seeall)
 
 function index()
 	local uci = luci.model.uci.cursor()
 	
-	-- Check if enhanced_dhcp config exists
+	-- Ensure enhanced_dhcp config exists, create if necessary
 	if not uci:get_first("enhanced_dhcp", "global") then
-		return
+		uci:set("enhanced_dhcp", "global", "global")
+		uci:set("enhanced_dhcp", "global", "enabled", "1")
+		uci:commit("enhanced_dhcp")
 	end
 	
 	-- Main menu entry
@@ -15,19 +17,19 @@ function index()
 	
 	-- Overview page
 	page = entry({"admin", "network", "enhanced_dhcp", "overview"}, 
-		template("dhcp_manager/overview"), _("Overview"), 1)
+		template("enhanced_dhcp_overview"), _("Overview"), 1)
 	page.leaf = true
 	page.acl_depends = { "luci-app-enhanced-dhcp" }
 	
 	-- DHCP Tags management
 	page = entry({"admin", "network", "enhanced_dhcp", "tags"}, 
-		cbi("dhcp_manager/tags"), _("DHCP Tags"), 2)
+		cbi("enhanced_dhcp_tags"), _("DHCP Tags"), 2)
 	page.dependent = false
 	page.acl_depends = { "luci-app-enhanced-dhcp" }
 	
 	-- Device management
 	page = entry({"admin", "network", "enhanced_dhcp", "devices"}, 
-		cbi("dhcp_manager/devices"), _("Device Management"), 3)
+		cbi("enhanced_dhcp_devices"), _("Device Management"), 3)
 	page.dependent = false
 	page.acl_depends = { "luci-app-enhanced-dhcp" }
 	
@@ -49,12 +51,28 @@ end
 function ajax_get_leases()
 	local http = luci.http
 	local sys = require "luci.sys"
-	local json = require "luci.json"
+	local json = require "luci.jsonc"
 	
 	http.prepare_content("application/json")
 	
 	local leases = {}
-	local dhcp_leases = sys.dhcp_leases()
+	-- Read DHCP leases directly
+	local dhcp_leases = {}
+	local lease_file = io.open("/var/dhcp.leases", "r")
+	if lease_file then
+		for line in lease_file:lines() do
+			local exp, mac, ip, name = line:match("(%d+) (%S+) (%S+) (%S*)")
+			if exp and mac and ip then
+				table.insert(dhcp_leases, {
+					expires = exp,
+					macaddr = mac,
+					ipaddr = ip,
+					hostname = name ~= "*" and name or "Unknown"
+				})
+			end
+		end
+		lease_file:close()
+	end
 	
 	for _, lease in ipairs(dhcp_leases) do
 		table.insert(leases, {
@@ -76,7 +94,7 @@ function ajax_get_devices()
 	local http = luci.http
 	local sys = require "luci.sys"
 	local uci = luci.model.uci.cursor()
-	local json = require "luci.json"
+	local json = require "luci.jsonc"
 	
 	http.prepare_content("application/json")
 	
@@ -131,7 +149,7 @@ end
 function ajax_apply_tag()
 	local http = luci.http
 	local uci = luci.model.uci.cursor()
-	local json = require "luci.json"
+	local json = require "luci.jsonc"
 	
 	http.prepare_content("application/json")
 	

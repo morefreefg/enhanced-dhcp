@@ -1,5 +1,6 @@
 local sys = require "luci.sys"
 local uci = require "luci.model.uci".cursor()
+local ip = require "luci.ip"
 
 -- Create map for DHCP configuration
 m = Map("dhcp", translate("DHCP Tags Management"), 
@@ -8,54 +9,46 @@ m = Map("dhcp", translate("DHCP Tags Management"),
 
 -- Tags section
 s = m:section(TypedSection, "tag", translate("DHCP Tags"))
-s.anonymous = true
+s.anonymous = false  -- Allow named sections so user can input tag name
 s.addremove = true
 s.template = "cbi/tblsection"
 s.sortable = true
 
--- Validate tag name
+-- Custom create function to ensure proper tag creation
 function s.create(self, section)
-	if section and section ~= "" then
-		-- Check length (3-32 characters)
-		if #section < 3 or #section > 32 then
-			self.map:error(translate("Tag name must be between 3 and 32 characters"))
-			return nil
-		end
-		
-		-- Check for valid characters (alphanumeric, underscore, hyphen)
-		if not section:match("^[a-zA-Z0-9_%-]+$") then
-			self.map:error(translate("Tag name can only contain letters, numbers, underscores and hyphens"))
-			return nil
-		end
-		
-		-- Check for reserved names
-		if section == "default" or section == "all" or section == "none" then
-			self.map:error(translate("'" .. section .. "' is a reserved tag name"))
-			return nil
-		end
-		
-		-- Check if tag already exists
-		local exists = false
-		uci:foreach("dhcp", "tag", function(s)
-			if s[".name"] == section then
-				exists = true
-				return false
-			end
-		end)
-		
-		if exists then
-			self.map:error(translate("Tag already exists"))
-			return nil
-		end
-		
-		return TypedSection.create(self, section)
+	-- Ensure we have a section name
+	if not section or section == "" then
+		self.map:error(translate("Tag name is required"))
+		return nil
 	end
-	return nil
+	
+	-- Basic validation
+	if #section < 2 or #section > 32 then
+		self.map:error(translate("Tag name must be between 2 and 32 characters"))
+		return nil
+	end
+	
+	if not section:match("^[a-zA-Z0-9_%-]+$") then
+		self.map:error(translate("Tag name can only contain letters, numbers, underscores and hyphens"))
+		return nil
+	end
+	
+	-- Check if already exists
+	if uci:get("dhcp", section) then
+		self.map:error(translate("Tag name already exists"))
+		return nil
+	end
+	
+	return TypedSection.create(self, section)
 end
 
--- Tag name (read-only display)
+-- Tag name (display the section name)
 name = s:option(DummyValue, ".name", translate("Tag Name"))
 name.width = "20%"
+
+function name.cfgvalue(self, section)
+	return section
+end
 
 -- Gateway option
 gateway = s:option(Value, "gateway", translate("Gateway"))
@@ -66,7 +59,7 @@ gateway.placeholder = "192.168.1.1"
 function gateway.write(self, section, value)
 	if value and value ~= "" then
 		-- Remove existing gateway option
-		local options = uci:get(section, "dhcp_option") or {}
+		local options = uci:get("dhcp", section, "dhcp_option") or {}
 		local new_options = {}
 		for _, opt in ipairs(options) do
 			if not opt:match("^3,") then
@@ -98,9 +91,9 @@ dns_servers.placeholder = "8.8.8.8,8.8.4.4"
 function dns_servers.validate(self, value)
 	if value and value ~= "" then
 		-- Split by comma and validate each IP
-		for ip in value:gmatch("[^,]+") do
-			local trimmed = ip:match("^%s*(.-)%s*$") -- trim whitespace
-			if not luci.ip.IPv4(trimmed) then
+		for ip_addr in value:gmatch("[^,]+") do
+			local trimmed = ip_addr:match("^%s*(.-)%s*$") -- trim whitespace
+			if not ip.IPv4(trimmed) then
 				return nil, translate("Invalid DNS server IP address: ") .. trimmed
 			end
 		end
@@ -120,8 +113,8 @@ function dns_servers.write(self, section, value)
 		end
 		-- Add new DNS option
 		local dns_list = {}
-		for ip in value:gmatch("[^,]+") do
-			local trimmed = ip:match("^%s*(.-)%s*$")
+		for ip_addr in value:gmatch("[^,]+") do
+			local trimmed = ip_addr:match("^%s*(.-)%s*$")
 			table.insert(dns_list, trimmed)
 		end
 		table.insert(new_options, "6," .. table.concat(dns_list, ","))
@@ -208,9 +201,9 @@ end
 
 function default_dns.validate(self, value)
 	if value and value ~= "" then
-		for ip in value:gmatch("[^,]+") do
-			local trimmed = ip:match("^%s*(.-)%s*$")
-			if not luci.ip.IPv4(trimmed) then
+		for ip_addr in value:gmatch("[^,]+") do
+			local trimmed = ip_addr:match("^%s*(.-)%s*$")
+			if not ip.IPv4(trimmed) then
 				return nil, translate("Invalid DNS server IP address: ") .. trimmed
 			end
 		end
@@ -221,8 +214,8 @@ end
 function default_dns.write(self, section, value)
 	if value and value ~= "" then
 		local dns_list = {}
-		for ip in value:gmatch("[^,]+") do
-			local trimmed = ip:match("^%s*(.-)%s*$")
+		for ip_addr in value:gmatch("[^,]+") do
+			local trimmed = ip_addr:match("^%s*(.-)%s*$")
 			table.insert(dns_list, trimmed)
 		end
 		uci:set_list("dhcp", "@dnsmasq[0]", "server", dns_list)

@@ -174,13 +174,14 @@ function exportConfiguration() {
 	
 	// Collect tag data
 	<%
+	local json = require "luci.jsonc"
 	uci:foreach("dhcp", "tag", function(section)
 		local tag_data = {
 			name = section[".name"],
 			options = section.dhcp_option or {}
 		}
 	%>
-	config.tags.push(<%=luci.json.encode(tag_data)%>);
+	config.tags.push(<%=json.stringify(tag_data)%>);
 	<% end) %>
 	
 	// Collect device data
@@ -193,7 +194,7 @@ function exportConfiguration() {
 			tag = section.tag
 		}
 	%>
-	config.devices.push(<%=luci.json.encode(host_data)%>);
+	config.devices.push(<%=json.stringify(host_data)%>);
 	<% end) %>
 	
 	// Download as JSON
