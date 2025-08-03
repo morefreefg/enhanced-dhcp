@@ -9,7 +9,16 @@ echo "======================================"
 
 # Configuration
 PACKAGE_NAME="luci-app-enhanced-dhcp"
-VERSION="1.0.0"
+
+# Read version from VERSION file
+if [ -f "VERSION" ]; then
+    VERSION=$(cat VERSION | tr -d '[:space:]')
+    echo "📌 Using version: $VERSION"
+else
+    echo "❌ VERSION file not found! Please create VERSION file with version number"
+    exit 1
+fi
+
 RELEASE="1"
 IPK_FILE="${PACKAGE_NAME}_${VERSION}-${RELEASE}_all.ipk"
 
@@ -31,7 +40,7 @@ mkdir -p "$BUILD_DIR/CONTROL"
 # Create control file
 cat > "$BUILD_DIR/CONTROL/control" <<EOF
 Package: luci-app-enhanced-dhcp
-Version: 1.0.0-1
+Version: ${VERSION}-${RELEASE}
 Description: Enhanced DHCP Options Management for OpenWrt
  Provides a web interface to manage DHCP option tags
  and assign them to devices easily.
@@ -56,7 +65,7 @@ if [ -z "${IPKG_INSTROOT}" ]; then
 		uci -q batch <<-EOT
 			set enhanced_dhcp.global=global
 			set enhanced_dhcp.global.initialized='1'
-			set enhanced_dhcp.global.version='1.0.0'
+			set enhanced_dhcp.global.version='${VERSION}'
 			commit enhanced_dhcp
 		EOT
 	fi

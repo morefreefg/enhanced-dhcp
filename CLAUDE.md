@@ -11,29 +11,48 @@ This is a LuCI application for OpenWrt that provides enhanced DHCP management fu
 
 ## Build and Deployment Workflow
 
-### 🚀 Release Process
+### 🚀 Release Process with Version Management
+**版本管理规则:**
+- 版本号存储在 `VERSION` 文件中
+- IPK 包名和内容必须与 git tag 版本号一致
+- 使用 `bump-version.sh` 自动递增版本号
+
 **发布流程:**
-1. **打 tag**: `git tag -a v1.0.x -m "Release description"`
-2. **发 release**: `gh release create v1.0.x --title "Title" --notes "Description" package.ipk`
+1. **Bump 版本**: `./bump-version.sh [patch|minor|major]` (默认 patch)
+2. **构建包**: `./build.sh` (自动读取 VERSION 文件)
+3. **提交**: `git add . && git commit -m "Release message"`
+4. **打 tag**: `git tag -a v$(cat VERSION) -m "Release description"`
+5. **发 release**: `gh release create v$(cat VERSION) --title "Title" --notes "Description" output/*.ipk`
 
 **完整发布命令示例:**
 ```bash
-# 1. 提交代码
-git add . && git commit -m "Release message"
+# 1. 递增版本号 (patch: 1.0.3 -> 1.0.4)
+./bump-version.sh patch
+
+# 2. 构建包 (自动使用新版本号)
+./build.sh
+
+# 3. 提交代码
+git add . && git commit -m "Release v$(cat VERSION): Description"
 git push origin main
 
-# 2. 创建标签
-git tag -a v1.0.1 -m "Release v1.0.1: Description"
-git push origin v1.0.1
+# 4. 创建标签
+git tag -a v$(cat VERSION) -m "Release v$(cat VERSION): Description"
+git push origin v$(cat VERSION)
 
-# 3. 创建GitHub Release
-gh release create v1.0.1 \
-  --title "Enhanced DHCP Manager v1.0.1" \
+# 5. 创建GitHub Release
+gh release create v$(cat VERSION) \
+  --title "Enhanced DHCP Manager v$(cat VERSION)" \
   --notes "Release description" \
-  output/luci-app-enhanced-dhcp_1.0.0-1_all.ipk \
+  output/luci-app-enhanced-dhcp_$(cat VERSION)-1_all.ipk \
   output/COMPATIBILITY_ADVANCED.md \
   output/test-install.sh
 ```
+
+**版本号规则:**
+- **patch**: Bug 修复, 小功能改进 (1.0.3 -> 1.0.4)
+- **minor**: 新功能, API 变更 (1.0.4 -> 1.1.0)  
+- **major**: 重大架构变更, 不兼容更新 (1.1.0 -> 2.0.0)
 
 ### 🔧 Complete Build-Deploy-Test Command
 ```bash
@@ -42,7 +61,7 @@ gh release create v1.0.1 \
 ```
 
 This comprehensive script performs:
-1. **Build** - Builds the IPK package using `build-optimized.sh`
+1. **Build** - Builds the IPK package using `build.sh`
 2. **Deploy** - Copies package to target device via SCP
 3. **Install** - Installs package (tries opkg, falls back to manual)
 4. **Test** - Runs 7 comprehensive tests
@@ -52,13 +71,13 @@ This comprehensive script performs:
 ### 📋 Manual Step-by-Step Process
 ```bash
 # Step 1: Build package
-./build-optimized.sh
+./build.sh
 
 # Step 2: Deploy to device
-scp output/luci-app-enhanced-dhcp_1.0.0-1_all.ipk root@192.168.10.2:/tmp/
+scp output/luci-app-enhanced-dhcp_$(cat VERSION)-1_all.ipk root@192.168.10.2:/tmp/
 
 # Step 3: Install on device
-ssh root@192.168.10.2 'opkg install /tmp/luci-app-enhanced-dhcp_1.0.0-1_all.ipk'
+ssh root@192.168.10.2 'opkg install /tmp/luci-app-enhanced-dhcp_*-1_all.ipk'
 
 # Step 4: Test installation
 ssh root@192.168.10.2 'uci show enhanced_dhcp && /etc/init.d/enhanced_dhcp status'
@@ -77,10 +96,11 @@ The automated test suite checks:
 ## Package Structure
 
 ### 📦 Generated Package
-- **Name**: `luci-app-enhanced-dhcp_1.0.0-1_all.ipk`
+- **Name**: `luci-app-enhanced-dhcp_$(cat VERSION)-1_all.ipk`
 - **Size**: ~20KB
 - **Location**: `output/`
 - **Type**: Universal IPK (all architectures)
+- **Version**: 自动从 `VERSION` 文件读取
 
 ### 🗂 Key Files
 ```
@@ -146,13 +166,14 @@ end
 ## Development Notes
 
 ### 🏗 Build System
-- **Primary Builder**: `build-optimized.sh` 
-- **Package Creator**: `create_fixed_ipk.py` (ensures proper ownership)
+- **Primary Builder**: `build.sh` (reads version from VERSION file)
+- **Version Management**: `bump-version.sh` (自动递增版本号)
+- **Version Storage**: `VERSION` 文件
 - **Output Directory**: `output/`
 
 ### 🔧 Installation Methods
 1. **Standard**: `opkg install package.ipk`
-2. **Manual**: `./shell-install.sh` (pure shell, no dependencies)
+2. **Manual**: `./manual-install.sh` (bypasses opkg)
 3. **Automated**: `./build-deploy-test.sh` (full workflow)
 
 ### 📝 Configuration Files
