@@ -1,0 +1,28 @@
+# Build files
+build/
+*.ipk
+*.tar.gz
+debian-binary
+control
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Log files
+*.log
+
+# Backup files
+*~
+*.backup

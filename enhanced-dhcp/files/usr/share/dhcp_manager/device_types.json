@@ -1,0 +1,79 @@
+{
+  "mac_prefixes": {
+    "00:0C:29": "VMware Virtual Machine",
+    "00:50:56": "VMware Virtual Machine",
+    "08:00:27": "VirtualBox Virtual Machine",
+    "52:54:00": "QEMU Virtual Machine",
+    "00:15:5D": "Microsoft Hyper-V",
+    "00:1C:42": "Parallels Virtual Machine",
+    "B8:27:EB": "Raspberry Pi Foundation",
+    "DC:A6:32": "Raspberry Pi Foundation",
+    "E4:5F:01": "Raspberry Pi Foundation",
+    "B0:BE:76": "Intel Corporate",
+    "00:1B:77": "Intel Corporate",
+    "18:03:73": "Dell Inc.",
+    "D4:BE:D9": "Dell Inc.",
+    "70:B3:D5": "IEEE Registration Authority",
+    "00:0D:3A": "Microsoft Corporation",
+    "00:03:FF": "Microsoft Corporation",
+    "28:18:78": "Apple Inc.",
+    "A8:86:DD": "Apple Inc.",
+    "00:22:58": "Apple Inc.",
+    "AC:DE:48": "Apple Inc.",
+    "F0:18:98": "Apple Inc.",
+    "3C:15:C2": "Apple Inc.",
+    "E8:06:88": "TP-Link Technologies",
+    "50:C7:BF": "TP-Link Technologies",
+    "A0:F3:C1": "TP-Link Technologies",
+    "00:1F:3F": "D-Link Corporation",
+    "00:26:5A": "D-Link Corporation",
+    "F8:1A:67": "D-Link Corporation",
+    "00:13:D4": "AzureWave Technology",
+    "04:BF:6D": "ASUSTek Computer",
+    "08:60:6E": "ASUSTek Computer",
+    "2C:56:DC": "ASUSTek Computer",
+    "00:22:B0": "D-Link Corporation",
+    "00:24:01": "D-Link Corporation"
+  },
+  "device_categories": {
+    "mobile": {
+      "keywords": ["phone", "mobile", "android", "iphone", "samsung", "huawei", "xiaomi"],
+      "icon": "phone"
+    },
+    "computer": {
+      "keywords": ["laptop", "desktop", "pc", "macbook", "imac", "windows", "ubuntu"],
+      "icon": "computer"
+    },
+    "tablet": {
+      "keywords": ["ipad", "tablet", "surface"],
+      "icon": "tablet"
+    },
+    "iot": {
+      "keywords": ["iot", "sensor", "smart", "camera", "doorbell", "thermostat"],
+      "icon": "iot"
+    },
+    "network": {
+      "keywords": ["router", "switch", "access", "point", "bridge", "extender"],
+      "icon": "network"
+    },
+    "printer": {
+      "keywords": ["printer", "scanner", "hp", "canon", "epson", "brother"],
+      "icon": "printer"
+    },
+    "tv": {
+      "keywords": ["tv", "roku", "chromecast", "appletv", "firestick"],
+      "icon": "tv"
+    },
+    "gaming": {
+      "keywords": ["xbox", "playstation", "nintendo", "steam", "console"],
+      "icon": "gamepad"
+    }
+  },
+  "default_tags": {
+    "mobile": "guest_network",
+    "iot": "iot_network", 
+    "gaming": "gaming_network",
+    "computer": "default",
+    "printer": "office_network"
+  }
+}

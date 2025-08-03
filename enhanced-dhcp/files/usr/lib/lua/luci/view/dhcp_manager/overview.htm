@@ -1,0 +1,215 @@
+<%#
+Enhanced DHCP Manager - Overview Template
+%>
+
+<%-
+local sys = require "luci.sys"
+local uci = require "luci.model.uci".cursor()
+local json = require "luci.json"
+
+-- Get statistics
+local total_tags = 0
+local total_devices = 0
+local online_devices = 0
+
+uci:foreach("dhcp", "tag", function(section)
+	total_tags = total_tags + 1
+end)
+
+uci:foreach("dhcp", "host", function(section)
+	total_devices = total_devices + 1
+end)
+
+local leases = sys.dhcp_leases()
+online_devices = #leases
+-%>
+
+<%+header%>
+
+<div class="cbi-map">
+	<h2 name="content"><%:Enhanced DHCP Overview%></h2>
+	<div class="cbi-section-descr">
+		<%:System overview showing DHCP tag and device statistics%>
+	</div>
+</div>
+
+<div class="cbi-section">
+	<div class="cbi-section-node">
+		<div style="display: flex; margin-bottom: 20px;">
+			<!-- Statistics Cards -->
+			<div style="flex: 1; margin-right: 10px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
+				<h3 style="margin-top: 0; color: #0069d9;"><%:DHCP Tags%></h3>
+				<div style="font-size: 24px; font-weight: bold;"><%=total_tags%></div>
+				<div style="color: #666; font-size: 12px;"><%:Total configured tags%></div>
+			</div>
+			
+			<div style="flex: 1; margin-right: 10px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
+				<h3 style="margin-top: 0; color: #28a745;"><%:Total Devices%></h3>
+				<div style="font-size: 24px; font-weight: bold;"><%=total_devices%></div>
+				<div style="color: #666; font-size: 12px;"><%:Configured devices%></div>
+			</div>
+			
+			<div style="flex: 1; padding: 15px; background: #f9f9f9; border-radius: 5px;">
+				<h3 style="margin-top: 0; color: #17a2b8;"><%:Online Devices%></h3>
+				<div style="font-size: 24px; font-weight: bold;"><%=online_devices%></div>
+				<div style="color: #666; font-size: 12px;"><%:Currently active%></div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Current DHCP Leases -->
+<div class="cbi-section">
+	<h3><%:Current DHCP Leases%></h3>
+	<div class="cbi-section-node">
+		<div class="table cbi-section-table" id="leases-table">
+			<div class="tr cbi-section-table-titles">
+				<div class="th cbi-section-table-cell"><%:Hostname%></div>
+				<div class="th cbi-section-table-cell"><%:IP Address%></div>
+				<div class="th cbi-section-table-cell"><%:MAC Address%></div>
+				<div class="th cbi-section-table-cell"><%:Lease Time%></div>
+				<div class="th cbi-section-table-cell"><%:DHCP Tag%></div>
+			</div>
+			
+			<% for _, lease in ipairs(leases) do %>
+			<div class="tr cbi-section-table-row">
+				<div class="td cbi-section-table-cell">
+					<%=lease.hostname or translate("Unknown")%>
+				</div>
+				<div class="td cbi-section-table-cell">
+					<%=lease.ipaddr%>
+				</div>
+				<div class="td cbi-section-table-cell">
+					<%=lease.macaddr%>
+				</div>
+				<div class="td cbi-section-table-cell">
+					<%
+					if lease.expires then
+						if lease.expires == "0" then
+							write(translate("Static"))
+						else
+							write(lease.expires)
+						end
+					else
+						write(translate("Unknown"))
+					end
+					%>
+				</div>
+				<div class="td cbi-section-table-cell">
+					<%
+					local device_tag = "default"
+					uci:foreach("dhcp", "host", function(host)
+						if host.mac and host.mac:lower() == lease.macaddr:lower() then
+							device_tag = host.tag or "default"
+							return false
+						end
+					end)
+					write(device_tag)
+					%>
+				</div>
+			</div>
+			<% end %>
+		</div>
+		
+		<% if #leases == 0 then %>
+		<div style="text-align: center; padding: 20px; color: #666;">
+			<%:No active DHCP leases found%>
+		</div>
+		<% end %>
+	</div>
+</div>
+
+<!-- DHCP Tags Summary -->
+<div class="cbi-section">
+	<h3><%:DHCP Tags Summary%></h3>
+	<div class="cbi-section-node">
+		<div class="table cbi-section-table">
+			<div class="tr cbi-section-table-titles">
+				<div class="th cbi-section-table-cell"><%:Tag Name%></div>
+				<div class="th cbi-section-table-cell"><%:Gateway%></div>
+				<div class="th cbi-section-table-cell"><%:DNS Servers%></div>
+				<div class="th cbi-section-table-cell"><%:Devices Using%></div>
+			</div>
+			
+			<!-- Default tag -->
+			<div class="tr cbi-section-table-row">
+				<div class="td cbi-section-table-cell">
+					<strong>default</strong>
+				</div>
+				<div class="td cbi-section-table-cell">
+					<%=uci:get("dhcp", "@dnsmasq[0]", "defaultroute") or uci:get("network", "lan", "ipaddr") or "Auto"%>
+				</div>
+				<div class="td cbi-section-table-cell">
+					<%
+					local default_dns = uci:get_list("dhcp", "@dnsmasq[0]", "server") or {}
+					write(table.concat(default_dns, ", ") ~= "" and table.concat(default_dns, ", ") or "Auto")
+					%>
+				</div>
+				<div class="td cbi-section-table-cell">
+					<%
+					local default_count = 0
+					uci:foreach("dhcp", "host", function(host)
+						if not host.tag or host.tag == "" or host.tag == "default" then
+							default_count = default_count + 1
+						end
+					end)
+					write(default_count)
+					%>
+				</div>
+			</div>
+			
+			<!-- Custom tags -->
+			<%
+			uci:foreach("dhcp", "tag", function(section)
+				local tag_name = section[".name"]
+				local gateway = ""
+				local dns_servers = ""
+				local options = section.dhcp_option or {}
+				
+				for _, opt in ipairs(options) do
+					local gw = opt:match("^3,(.+)$")
+					if gw then gateway = gw end
+					
+					local dns = opt:match("^6,(.+)$")
+					if dns then dns_servers = dns end
+				end
+				
+				-- Count devices using this tag
+				local device_count = 0
+				uci:foreach("dhcp", "host", function(host)
+					if host.tag == tag_name then
+						device_count = device_count + 1
+					end
+				end)
+			%>
+			<div class="tr cbi-section-table-row">
+				<div class="td cbi-section-table-cell"><%=tag_name%></div>
+				<div class="td cbi-section-table-cell"><%=gateway ~= "" and gateway or translate("Not set")%></div>
+				<div class="td cbi-section-table-cell"><%=dns_servers ~= "" and dns_servers or translate("Not set")%></div>
+				<div class="td cbi-section-table-cell"><%=device_count%></div>
+			</div>
+			<% end) %>
+		</div>
+	</div>
+</div>
+
+<!-- Action Buttons -->
+<div class="cbi-section">
+	<div class="cbi-section-node" style="text-align: center; padding: 20px;">
+		<input type="button" class="cbi-button cbi-button-apply" value="<%:Manage Tags%>" 
+			onclick="location.href='<%=url("admin/network/enhanced_dhcp/tags")%>'" />
+		<input type="button" class="cbi-button cbi-button-apply" value="<%:Manage Devices%>" 
+			onclick="location.href='<%=url("admin/network/enhanced_dhcp/devices")%>'" />
+		<input type="button" class="cbi-button cbi-button-action" value="<%:Refresh%>" 
+			onclick="location.reload()" />
+	</div>
+</div>
+
+<script type="text/javascript">
+// Auto-refresh every 30 seconds
+setTimeout(function() {
+	location.reload();
+}, 30000);
+</script>
+
+<%+footer%>
