@@ -51,5 +51,5 @@ Access the interface at: http://[router-ip]/enhanced-dhcp/
 
 ## Build Information
 - Version: 2.0.0
-- Build Date: Mon Aug  4 19:30:36 CST 2025
-- Package Size:  24K
+- Build Date: Tue Aug  5 00:02:46 CST 2025
+- Package Size:  20K
