@@ -1,0 +1,544 @@
+#!/bin/sh
+
+# Enhanced DHCP API Backend
+# CGI script providing REST-like API for DHCP management
+# No LuCI dependencies - pure shell script implementation
+
+# Set HTTP headers
+echo "Content-Type: application/json"
+echo "Cache-Control: no-cache"
+echo ""
+
+# Configuration
+DHCP_LEASES="/var/dhcp.leases"
+ARP_TABLE="/proc/net/arp"
+DEVICE_TYPES_FILE="/www/enhanced-dhcp/device-types.json"
+
+# Helper functions
+log_message() {
+    logger -t enhanced-dhcp-api "$1"
+}
+
+# JSON response helpers
+json_success() {
+    local data="$1"
+    echo "{\"success\":true,\"data\":$data}"
+}
+
+json_error() {
+    local message="$1"
+    echo "{\"success\":false,\"error\":\"$message\"}"
+}
+
+# Parse DHCP leases file
+parse_dhcp_leases() {
+    local json_array="["
+    local first=true
+    
+    if [ -f "$DHCP_LEASES" ]; then
+        while IFS= read -r line; do
+            # Parse lease line: timestamp mac ip hostname
+            case "$line" in
+                *" "*)
+                    set -- $line
+                    if [ $# -ge 4 ]; then
+                        local timestamp="$1"
+                        local macaddr="$2"
+                        local ipaddr="$3"
+                        local hostname="$4"
+                        
+                        # Handle unknown hostname
+                        [ "$hostname" = "*" ] && hostname="Unknown"
+                        
+                        # Build JSON object
+                        if [ "$first" = true ]; then
+                            first=false
+                        else
+                            json_array="$json_array,"
+                        fi
+                        
+                        json_array="$json_array{\"timestamp\":\"$timestamp\",\"macaddr\":\"$macaddr\",\"ipaddr\":\"$ipaddr\",\"hostname\":\"$hostname\"}"
+                    fi
+                    ;;
+            esac
+        done < "$DHCP_LEASES"
+    fi
+    
+    json_array="$json_array]"
+    echo "$json_array"
+}
+
+# Get ARP table entries
+parse_arp_table() {
+    local json_array="["
+    local first=true
+    
+    if [ -f "$ARP_TABLE" ]; then
+        # Skip header line
+        tail -n +2 "$ARP_TABLE" | while IFS= read -r line; do
+            # Parse ARP line: IP HW_type Flags HW_address Mask Device
+            set -- $line
+            if [ $# -ge 4 ]; then
+                local ipaddr="$1"
+                local macaddr="$4"
+                local device="$6"
+                
+                # Skip incomplete entries
+                [ "$macaddr" = "00:00:00:00:00:00" ] && continue
+                
+                # Build JSON object
+                if [ "$first" = true ]; then
+                    first=false
+                else
+                    json_array="$json_array,"
+                fi
+                
+                json_array="$json_array{\"ipaddr\":\"$ipaddr\",\"macaddr\":\"$macaddr\",\"device\":\"$device\"}"
+            fi
+        done
+    fi
+    
+    json_array="$json_array]"
+    echo "$json_array"
+}
+
+# Get static DHCP hosts from UCI
+get_dhcp_hosts() {
+    local json_array="["
+    local first=true
+    
+    # Get all host sections
+    uci -q foreach dhcp host '
+        mac=$(uci -q get dhcp.$1.mac)
+        name=$(uci -q get dhcp.$1.name)
+        ip=$(uci -q get dhcp.$1.ip)
+        tag=$(uci -q get dhcp.$1.tag)
+        
+        [ -z "$mac" ] && exit
+        [ -z "$name" ] && name="Unknown"
+        [ -z "$ip" ] && ip="Auto"
+        [ -z "$tag" ] && tag="default"
+        
+        if [ "'$first'" = "true" ]; then
+            first=false
+        else
+            printf ","
+        fi
+        
+        printf "{\"section\":\"$1\",\"mac\":\"$mac\",\"name\":\"$name\",\"ip\":\"$ip\",\"tag\":\"$tag\"}"
+    ' 2>/dev/null
+    
+    json_array="$json_array]"
+    echo "$json_array"
+}
+
+# Get DHCP tags from UCI
+get_dhcp_tags() {
+    local json_array="["
+    local first=true
+    
+    # Get all tag sections
+    uci -q foreach dhcp tag '
+        tag_name=$1
+        description=$(uci -q get dhcp.$1.description)
+        options=$(uci -q get dhcp.$1.dhcp_option)
+        
+        [ -z "$description" ] && description=""
+        
+        # Parse options to extract gateway and DNS
+        gateway=""
+        dns=""
+        if [ -n "$options" ]; then
+            # Handle space-separated options
+            for opt in $options; do
+                case "$opt" in
+                    3,*) gateway="${opt#3,}" ;;
+                    6,*) dns="${opt#6,}" ;;
+                esac
+            done
+        fi
+        
+        if [ "'$first'" = "true" ]; then
+            first=false
+        else
+            printf ","
+        fi
+        
+        printf "{\"name\":\"$tag_name\",\"description\":\"$description\",\"gateway\":\"$gateway\",\"dns\":\"$dns\"}"
+    ' 2>/dev/null
+    
+    json_array="$json_array]"
+    echo "$json_array"
+}
+
+# Get combined device information
+get_devices() {
+    local json_array="["
+    local first=true
+    local temp_file="/tmp/enhanced_dhcp_devices.$$"
+    
+    # Create temporary file with all device data
+    {
+        # Static hosts
+        uci -q foreach dhcp host '
+            mac=$(uci -q get dhcp.$1.mac)
+            name=$(uci -q get dhcp.$1.name)
+            ip=$(uci -q get dhcp.$1.ip)
+            tag=$(uci -q get dhcp.$1.tag)
+            
+            [ -z "$mac" ] && exit
+            [ -z "$name" ] && name="Unknown"
+            [ -z "$ip" ] && ip="Auto"
+            [ -z "$tag" ] && tag="default"
+            
+            echo "static:$mac:$name:$ip:$tag"
+        ' 2>/dev/null
+        
+        # DHCP leases
+        if [ -f "$DHCP_LEASES" ]; then
+            while IFS= read -r line; do
+                set -- $line
+                if [ $# -ge 4 ]; then
+                    local timestamp="$1"
+                    local macaddr="$2"
+                    local ipaddr="$3"
+                    local hostname="$4"
+                    
+                    [ "$hostname" = "*" ] && hostname="Unknown"
+                    echo "lease:$macaddr:$hostname:$ipaddr:default:$timestamp"
+                fi
+            done < "$DHCP_LEASES"
+        fi
+        
+        # ARP table
+        if [ -f "$ARP_TABLE" ]; then
+            tail -n +2 "$ARP_TABLE" | while IFS= read -r line; do
+                set -- $line
+                if [ $# -ge 4 ]; then
+                    local ipaddr="$1"
+                    local macaddr="$4"
+                    
+                    [ "$macaddr" = "00:00:00:00:00:00" ] && continue
+                    echo "arp:$macaddr:Unknown:$ipaddr:default"
+                fi
+            done
+        fi
+    } > "$temp_file"
+    
+    # Process and merge device data
+    awk -F: '
+    {
+        mac = $2
+        if (mac in devices) {
+            # Merge data, prefer static over lease over arp
+            if ($1 == "static" || (devices[mac]["type"] != "static" && $1 == "lease")) {
+                devices[mac]["type"] = $1
+                devices[mac]["name"] = $3
+                devices[mac]["ip"] = $4
+                devices[mac]["tag"] = $5
+                if ($1 == "lease") devices[mac]["timestamp"] = $6
+            }
+        } else {
+            devices[mac]["type"] = $1
+            devices[mac]["name"] = $3
+            devices[mac]["ip"] = $4
+            devices[mac]["tag"] = $5
+            if ($1 == "lease") devices[mac]["timestamp"] = $6
+        }
+    }
+    END {
+        first = 1
+        for (mac in devices) {
+            if (!first) printf ","
+            first = 0
+            
+            printf "{\"mac\":\"%s\",\"name\":\"%s\",\"ip\":\"%s\",\"tag\":\"%s\",\"type\":\"%s\"", 
+                mac, devices[mac]["name"], devices[mac]["ip"], devices[mac]["tag"], devices[mac]["type"]
+                
+            if (devices[mac]["timestamp"]) {
+                printf ",\"timestamp\":\"%s\"", devices[mac]["timestamp"]
+            }
+            printf "}"
+        }
+    }
+    ' "$temp_file"
+    
+    rm -f "$temp_file"
+    
+    json_array="$json_array]"
+    echo "$json_array"
+}
+
+# Apply tag to device
+apply_tag() {
+    local mac="$1"
+    local tag="$2"
+    local name="$3"
+    
+    # Validate MAC address
+    if ! echo "$mac" | grep -qE '^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$'; then
+        json_error "Invalid MAC address format"
+        return 1
+    fi
+    
+    # Normalize MAC address (use colons)
+    mac=$(echo "$mac" | tr '[:lower:]' '[:upper:]' | sed 's/-/:/g')
+    
+    # Check if tag exists (unless it's default)
+    if [ "$tag" != "default" ]; then
+        if ! uci -q get dhcp."$tag" >/dev/null 2>&1; then
+            json_error "Tag does not exist: $tag"
+            return 1
+        fi
+    fi
+    
+    # Remove existing host entry for this MAC
+    local existing_section=""
+    existing_section=$(uci -q foreach dhcp host '
+        existing_mac=$(uci -q get dhcp.$1.mac)
+        if [ "$existing_mac" = "'"$mac"'" ]; then
+            echo $1
+            exit
+        fi
+    ' 2>/dev/null)
+    
+    if [ -n "$existing_section" ]; then
+        uci -q delete dhcp."$existing_section"
+    fi
+    
+    # Add new host entry
+    local section_name=$(uci -q add dhcp host)
+    if [ -z "$section_name" ]; then
+        json_error "Failed to create host section"
+        return 1
+    fi
+    
+    uci -q set dhcp."$section_name".mac="$mac"
+    uci -q set dhcp."$section_name".name="${name:-device_$(echo $mac | tr ':' '')}"
+    
+    if [ "$tag" != "default" ]; then
+        uci -q set dhcp."$section_name".tag="$tag"
+    fi
+    
+    # Commit changes
+    if ! uci -q commit dhcp; then
+        json_error "Failed to save configuration"
+        return 1
+    fi
+    
+    # Log the change
+    log_message "Applied tag $tag to device $mac ($name)"
+    
+    # Restart dnsmasq in background
+    (/etc/init.d/dnsmasq restart >/dev/null 2>&1) &
+    
+    json_success '"Device updated successfully"'
+}
+
+# Create DHCP tag
+create_tag() {
+    local tag_name="$1"
+    local gateway="$2"
+    local dns="$3"
+    local description="$4"
+    
+    # Validate tag name
+    if ! echo "$tag_name" | grep -qE '^[a-zA-Z0-9_-]{2,32}$'; then
+        json_error "Invalid tag name. Use 2-32 characters (letters, numbers, underscore, hyphen)"
+        return 1
+    fi
+    
+    # Check if tag already exists
+    if uci -q get dhcp."$tag_name" >/dev/null 2>&1; then
+        json_error "Tag already exists: $tag_name"
+        return 1
+    fi
+    
+    # Create tag section
+    uci -q set dhcp."$tag_name"=tag
+    
+    # Set description if provided
+    if [ -n "$description" ]; then
+        uci -q set dhcp."$tag_name".description="$description"
+    fi
+    
+    # Build DHCP options array
+    local options=""
+    if [ -n "$gateway" ]; then
+        options="3,$gateway"
+    fi
+    if [ -n "$dns" ]; then
+        if [ -n "$options" ]; then
+            options="$options 6,$dns"
+        else
+            options="6,$dns"
+        fi
+    fi
+    
+    if [ -n "$options" ]; then
+        uci -q set dhcp."$tag_name".dhcp_option="$options"
+    fi
+    
+    # Commit changes
+    if ! uci -q commit dhcp; then
+        json_error "Failed to save tag configuration"
+        return 1
+    fi
+    
+    log_message "Created tag $tag_name"
+    
+    # Restart dnsmasq in background
+    (/etc/init.d/dnsmasq restart >/dev/null 2>&1) &
+    
+    json_success '"Tag created successfully"'
+}
+
+# Delete DHCP tag
+delete_tag() {
+    local tag_name="$1"
+    
+    # Check if tag is in use
+    local in_use=false
+    uci -q foreach dhcp host '
+        host_tag=$(uci -q get dhcp.$1.tag)
+        if [ "$host_tag" = "'"$tag_name"'" ]; then
+            in_use=true
+            exit
+        fi
+    ' 2>/dev/null
+    
+    if [ "$in_use" = "true" ]; then
+        json_error "Cannot delete tag: it is used by devices"
+        return 1
+    fi
+    
+    # Delete tag
+    if ! uci -q delete dhcp."$tag_name"; then
+        json_error "Failed to delete tag"
+        return 1
+    fi
+    
+    # Commit changes
+    if ! uci -q commit dhcp; then
+        json_error "Failed to save configuration"
+        return 1
+    fi
+    
+    log_message "Deleted tag $tag_name"
+    
+    # Restart dnsmasq in background
+    (/etc/init.d/dnsmasq restart >/dev/null 2>&1) &
+    
+    json_success '"Tag deleted successfully"'
+}
+
+# Get system statistics
+get_stats() {
+    local total_tags=0
+    local total_devices=0
+    local online_devices=0
+    
+    # Count tags
+    total_tags=$(uci -q foreach dhcp tag 'echo 1' 2>/dev/null | wc -l)
+    
+    # Count static devices
+    total_devices=$(uci -q foreach dhcp host 'echo 1' 2>/dev/null | wc -l)
+    
+    # Count active leases
+    if [ -f "$DHCP_LEASES" ]; then
+        online_devices=$(wc -l < "$DHCP_LEASES")
+    fi
+    
+    echo "{\"total_tags\":$total_tags,\"total_devices\":$total_devices,\"online_devices\":$online_devices}"
+}
+
+# Parse request
+REQUEST_METHOD="${REQUEST_METHOD:-GET}"
+QUERY_STRING="${QUERY_STRING:-}"
+PATH_INFO="${PATH_INFO:-}"
+
+# Parse query parameters
+parse_query() {
+    local query="$1"
+    local IFS='&'
+    set -- $query
+    for param; do
+        local key="${param%%=*}"
+        local value="${param#*=}"
+        # URL decode value
+        value=$(printf '%b' "${value//%/\\x}")
+        eval "PARAM_$key=\"\$value\""
+    done
+}
+
+# Parse POST data
+parse_post() {
+    if [ "$REQUEST_METHOD" = "POST" ]; then
+        local content_length="${CONTENT_LENGTH:-0}"
+        if [ "$content_length" -gt 0 ]; then
+            read -n "$content_length" POST_DATA
+            parse_query "$POST_DATA"
+        fi
+    fi
+}
+
+# Main request handler
+case "$REQUEST_METHOD" in
+    "GET")
+        parse_query "$QUERY_STRING"
+        
+        case "$PATH_INFO" in
+            "/leases")
+                json_success "$(parse_dhcp_leases)"
+                ;;
+            "/devices")
+                json_success "$(get_devices)"
+                ;;
+            "/tags")
+                json_success "$(get_dhcp_tags)"
+                ;;
+            "/stats")
+                json_success "$(get_stats)"
+                ;;
+            "/arp")
+                json_success "$(parse_arp_table)"
+                ;;
+            *)
+                json_error "Unknown endpoint: $PATH_INFO"
+                ;;
+        esac
+        ;;
+    "POST")
+        parse_post
+        
+        case "$PATH_INFO" in
+            "/apply_tag")
+                if [ -n "$PARAM_mac" ] && [ -n "$PARAM_tag" ]; then
+                    apply_tag "$PARAM_mac" "$PARAM_tag" "$PARAM_name"
+                else
+                    json_error "Missing required parameters: mac, tag"
+                fi
+                ;;
+            "/create_tag")
+                if [ -n "$PARAM_name" ]; then
+                    create_tag "$PARAM_name" "$PARAM_gateway" "$PARAM_dns" "$PARAM_description"
+                else
+                    json_error "Missing required parameter: name"
+                fi
+                ;;
+            "/delete_tag")
+                if [ -n "$PARAM_name" ]; then
+                    delete_tag "$PARAM_name"
+                else
+                    json_error "Missing required parameter: name"
+                fi
+                ;;
+            *)
+                json_error "Unknown endpoint: $PATH_INFO"
+                ;;
+        esac
+        ;;
+    *)
+        json_error "Method not allowed: $REQUEST_METHOD"
+        ;;
+esac
