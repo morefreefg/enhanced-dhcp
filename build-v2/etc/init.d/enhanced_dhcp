@@ -1,0 +1,236 @@
+#!/bin/sh /etc/rc.common
+
+# Enhanced DHCP Manager v2.0 - HTML Edition Init Script
+# Simplified version with no LuCI dependencies
+
+START=60
+STOP=15
+
+CONFIG_FILE="/etc/config/enhanced_dhcp"
+LOG_FILE="/var/log/enhanced_dhcp.log"
+
+start_service() {
+	# Check if enhanced_dhcp config exists
+	[ ! -f "$CONFIG_FILE" ] && {
+		echo "Enhanced DHCP configuration not found, creating default..."
+		create_default_config
+	}
+	
+	# Ensure log directory exists
+	mkdir -p $(dirname $LOG_FILE) 2>/dev/null || true
+	
+	# Create log file with proper permissions
+	[ ! -f "$LOG_FILE" ] && {
+		touch "$LOG_FILE" 2>/dev/null || true
+		chmod 640 "$LOG_FILE" 2>/dev/null || true
+	}
+	
+	# Initialize enhanced DHCP settings
+	init_enhanced_dhcp
+	
+	log_message "info" "Enhanced DHCP Manager v2.0 started"
+	echo "Enhanced DHCP Manager v2.0 started"
+}
+
+stop_service() {
+	log_message "info" "Enhanced DHCP Manager v2.0 stopped"
+	echo "Enhanced DHCP Manager v2.0 stopped"
+}
+
+reload_service() {
+	echo "Reloading Enhanced DHCP configuration..."
+	init_enhanced_dhcp
+	
+	# Restart dnsmasq to apply changes
+	/etc/init.d/dnsmasq restart
+	
+	echo "Enhanced DHCP configuration reloaded"
+}
+
+create_default_config() {
+	uci -q batch <<-EOF
+		set enhanced_dhcp.global=global
+		set enhanced_dhcp.global.initialized='1'
+		set enhanced_dhcp.global.version='2.0.0'
+		set enhanced_dhcp.global.auto_discovery='1'
+		set enhanced_dhcp.global.log_level='info'
+		
+		set enhanced_dhcp.settings=settings
+		set enhanced_dhcp.settings.enable_device_discovery='1'
+		set enhanced_dhcp.settings.discovery_interval='30'
+		set enhanced_dhcp.settings.auto_apply_default_tag='1'
+		set enhanced_dhcp.settings.backup_on_change='1'
+		set enhanced_dhcp.settings.max_backup_files='10'
+		
+		set enhanced_dhcp.ui=ui
+		set enhanced_dhcp.ui.refresh_interval='30'
+		set enhanced_dhcp.ui.show_offline_devices='1'
+		set enhanced_dhcp.ui.show_lease_time='1'
+		set enhanced_dhcp.ui.compact_view='0'
+		
+		set enhanced_dhcp.logging=logging
+		set enhanced_dhcp.logging.enable_audit_log='1'
+		set enhanced_dhcp.logging.log_tag_changes='1'
+		set enhanced_dhcp.logging.log_device_changes='1'
+		set enhanced_dhcp.logging.max_log_size='1024'
+		
+		commit enhanced_dhcp
+	EOF
+}
+
+init_enhanced_dhcp() {
+	local enabled
+	local auto_discovery
+	
+	# Load configuration
+	config_load enhanced_dhcp
+	
+	config_get enabled global initialized
+	config_get auto_discovery settings enable_device_discovery
+	
+	# Ensure essential settings are applied
+	if [ "$enabled" = "1" ]; then
+		log_message "info" "Enhanced DHCP Manager v2.0 is enabled"
+		
+		# Validate DHCP configuration
+		validate_dhcp_config
+		
+		# Setup web interface permissions
+		setup_web_permissions
+		
+	else
+		log_message "warn" "Enhanced DHCP Manager is not properly initialized"
+	fi
+}
+
+validate_dhcp_config() {
+	local error_count=0
+	
+	# Check for duplicate MAC addresses in static hosts
+	local macs=$(uci show dhcp 2>/dev/null | grep "\.mac=" | cut -d"'" -f2 | sort 2>/dev/null || true)
+	local duplicate_macs=$(echo "$macs" | uniq -d 2>/dev/null || true)
+	
+	if [ -n "$duplicate_macs" ]; then
+		log_message "error" "Duplicate MAC addresses found: $duplicate_macs"
+		error_count=$((error_count + 1))
+	fi
+	
+	# Check for invalid tag references
+	uci -q foreach dhcp host '
+		tag=$(uci -q get dhcp.$1.tag 2>/dev/null || true)
+		if [ -n "$tag" ] && [ "$tag" != "default" ]; then
+			if ! uci -q get dhcp.$tag >/dev/null 2>&1; then
+				echo "Invalid tag reference: $tag in host $1" >&2
+				error_count=$((error_count + 1))
+			fi
+		fi
+	' 2>/dev/null || true
+	
+	if [ $error_count -eq 0 ]; then
+		log_message "info" "DHCP configuration validation passed"
+	else
+		log_message "warn" "DHCP configuration validation found $error_count issues"
+	fi
+	
+	return $error_count
+}
+
+setup_web_permissions() {
+	# Ensure CGI script is executable
+	chmod +x /www/cgi-bin/enhanced-dhcp-api 2>/dev/null || true
+	
+	# Ensure web files have proper permissions
+	chmod 644 /www/enhanced-dhcp/*.html 2>/dev/null || true
+	chmod 644 /www/enhanced-dhcp/*.css 2>/dev/null || true
+	chmod 644 /www/enhanced-dhcp/*.js 2>/dev/null || true
+	chmod 644 /www/enhanced-dhcp/*.json 2>/dev/null || true
+	
+	log_message "info" "Web interface permissions configured"
+}
+
+log_message() {
+	local level="$1"
+	local message="$2"
+	local timestamp=$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || date)
+	
+	# Check if logging is enabled
+	local logging_enabled
+	config_get logging_enabled logging enable_audit_log 2>/dev/null || logging_enabled="1"
+	
+	if [ "$logging_enabled" = "1" ]; then
+		echo "[$timestamp] [$level] $message" >> "$LOG_FILE" 2>/dev/null || true
+		
+		# Also log to system log for important messages
+		case "$level" in
+			"error") logger -t enhanced_dhcp -p daemon.err "$message" 2>/dev/null || true ;;
+			"warn") logger -t enhanced_dhcp -p daemon.warning "$message" 2>/dev/null || true ;;
+			"info") logger -t enhanced_dhcp -p daemon.info "$message" 2>/dev/null || true ;;
+		esac
+	fi
+	
+	# Rotate log if it gets too large
+	rotate_log_if_needed
+}
+
+rotate_log_if_needed() {
+	local max_size
+	config_get max_size logging max_log_size 2>/dev/null || max_size="1024"
+	
+	if [ -f "$LOG_FILE" ]; then
+		local size_kb=$(du -k "$LOG_FILE" | cut -f1)
+		if [ "$size_kb" -gt "$max_size" ]; then
+			mv "$LOG_FILE" "${LOG_FILE}.old"
+			touch "$LOG_FILE"
+			log_message "info" "Log file rotated (size: ${size_kb}KB)"
+		fi
+	fi
+}
+
+# Status function
+status() {
+	echo "Enhanced DHCP Manager v2.0 Status:"
+	echo "=================================="
+	
+	local enabled
+	config_get enabled global initialized 2>/dev/null || enabled="0"
+	echo "Status: $([ "$enabled" = "1" ] && echo "Enabled" || echo "Disabled")"
+	
+	if [ -f "$LOG_FILE" ]; then
+		echo "Log file: $LOG_FILE ($(du -h "$LOG_FILE" | cut -f1))"
+		echo "Last 5 log entries:"
+		tail -5 "$LOG_FILE" 2>/dev/null | sed 's/^/  /' || echo "  (no log entries)"
+	else
+		echo "Log file: Not found"
+	fi
+	
+	echo ""
+	echo "Web Interface: http://[router-ip]/enhanced-dhcp/"
+	echo "API Endpoint: http://[router-ip]/cgi-bin/enhanced-dhcp-api"
+}
+
+# Health check function
+health_check() {
+	validate_dhcp_config
+	local result=$?
+	
+	if [ $result -eq 0 ]; then
+		echo "Enhanced DHCP Manager v2.0: Healthy"
+	else
+		echo "Enhanced DHCP Manager v2.0: Issues detected ($result errors)"
+	fi
+	
+	return $result
+}
+
+# Command handling
+case "$1" in
+	health)
+		health_check
+		;;
+	status)
+		status
+		;;
+	*)
+		# Default procd behavior
+		;;
+esac

@@ -9,6 +9,23 @@ This is a LuCI application for OpenWrt that provides enhanced DHCP management fu
 - Platform: iStoreOS 22.03.7 (x86_64)
 - Status: ✅ Working and tested
 
+## Testing Workflow
+**Always test IPK packages on the actual target device:**
+```bash
+# 1. Deploy IPK to target device
+scp output-v2/luci-app-enhanced-dhcp-v2_2.0.0-1_all.ipk root@192.168.10.2:/tmp/
+
+# 2. Install using opkg on target device
+ssh root@192.168.10.2 'opkg install /tmp/luci-app-enhanced-dhcp-v2_2.0.0-1_all.ipk'
+
+# 3. Test web interface
+curl http://192.168.10.2/enhanced-dhcp/
+curl http://192.168.10.2/cgi-bin/enhanced-dhcp-api/stats
+
+# 4. Verify file installation
+ssh root@192.168.10.2 'ls -la /www/enhanced-dhcp/ && ls -la /www/cgi-bin/enhanced-dhcp-api'
+```
+
 ## Build and Deployment Workflow
 
 ### 🚀 Release Process with Version Management

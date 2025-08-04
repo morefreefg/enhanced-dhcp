@@ -57,6 +57,9 @@ validate_sources() {
         "$SCRIPT_DIR/$PROJECT_NAME/files/www/enhanced-dhcp/script.js"
         "$SCRIPT_DIR/$PROJECT_NAME/files/etc/config/enhanced_dhcp"
         "$SCRIPT_DIR/$PROJECT_NAME/files/etc/init.d/enhanced_dhcp"
+        "$SCRIPT_DIR/$PROJECT_NAME/files/usr/lib/lua/luci/controller/enhanced_dhcp_v2.lua"
+        "$SCRIPT_DIR/$PROJECT_NAME/files/usr/lib/lua/luci/view/enhanced_dhcp_v2.htm"
+        "$SCRIPT_DIR/$PROJECT_NAME/files/usr/share/rpcd/acl.d/luci-app-enhanced-dhcp-v2.json"
     )
     
     for file in "${required_files[@]}"; do
@@ -202,6 +205,8 @@ copy_package_files() {
     find "$BUILD_DIR" -type f -path "*/config/*" -exec chmod 644 {} \;
     find "$BUILD_DIR" -type f -path "*/init.d/*" -exec chmod 755 {} \;
     find "$BUILD_DIR" -type f -path "*/cgi-bin/*" -exec chmod 755 {} \;
+    find "$BUILD_DIR" -type f -name "*.lua" -exec chmod 644 {} \;
+    find "$BUILD_DIR" -type f -name "*.htm" -exec chmod 644 {} \;
     
     log_success "Package files copied with correct permissions"
 }
@@ -212,22 +217,25 @@ build_ipk() {
     
     local package_file="${PACKAGE_NAME}_${VERSION}-1_all.ipk"
     
-    # Create the IPK package using tar
+    # Create the IPK package using ar (OpenWrt standard)
     cd "$BUILD_DIR"
     
-    # Create data.tar.gz (all files except CONTROL)
-    find . -path "./CONTROL" -prune -o -type f -print | sort | tar -czf data.tar.gz -T -
+    # Create data.tar.gz (all files except CONTROL, with proper paths)
+    tar --exclude='./CONTROL' -czf data.tar.gz ./etc ./www ./usr
     
     # Create control.tar.gz (CONTROL directory contents)
     cd CONTROL
-    tar -czf ../control.tar.gz .
+    tar -czf ../control.tar.gz ./*
     cd ..
     
     # Create debian-binary file
     echo "2.0" > debian-binary
     
-    # Create the final IPK file
-    tar -czf "$OUTPUT_DIR/$package_file" debian-binary control.tar.gz data.tar.gz
+    # Create the final IPK file using gzipped tar (correct OpenWrt format)
+    # OpenWrt IPK files are gzipped tar archives, not ar archives
+    tar --owner=0 --group=0 -cf "${package_file}.tar" debian-binary control.tar.gz data.tar.gz
+    gzip "${package_file}.tar"
+    mv "${package_file}.tar.gz" "$OUTPUT_DIR/$package_file"
     
     cd "$SCRIPT_DIR"
     

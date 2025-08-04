@@ -63,6 +63,18 @@ define Package/luci-app-enhanced-dhcp-v2/install
 	# CGI API backend
 	$(INSTALL_DIR) $(1)/www/cgi-bin
 	$(INSTALL_BIN) ./files/www/cgi-bin/enhanced-dhcp-api $(1)/www/cgi-bin/
+	
+	# LuCI integration files
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
+	$(INSTALL_DATA) ./files/usr/lib/lua/luci/controller/enhanced_dhcp_v2.lua $(1)/usr/lib/lua/luci/controller/
+	
+	# LuCI view templates
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view
+	$(INSTALL_DATA) ./files/usr/lib/lua/luci/view/enhanced_dhcp_v2.htm $(1)/usr/lib/lua/luci/view/
+	
+	# ACL permissions for LuCI
+	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
+	$(INSTALL_DATA) ./files/usr/share/rpcd/acl.d/luci-app-enhanced-dhcp-v2.json $(1)/usr/share/rpcd/acl.d/
 endef
 
 define Package/luci-app-enhanced-dhcp-v2/postinst
@@ -73,18 +85,31 @@ define Package/luci-app-enhanced-dhcp-v2/postinst
 if [ -z "$${IPKG_INSTROOT}" ]; then
 	echo "Configuring Enhanced DHCP Manager v2.0..."
 	
+	# Ensure directories exist with proper permissions
+	mkdir -p /www/enhanced-dhcp
+	mkdir -p /www/cgi-bin
+	chown -R root:root /www/enhanced-dhcp 2>/dev/null || true
+	
+	# Set proper file permissions
+	chmod 755 /www/enhanced-dhcp
+	chmod 644 /www/enhanced-dhcp/*.html 2>/dev/null || true
+	chmod 644 /www/enhanced-dhcp/*.css 2>/dev/null || true
+	chmod 644 /www/enhanced-dhcp/*.js 2>/dev/null || true
+	chmod 644 /www/enhanced-dhcp/*.json 2>/dev/null || true
+	chmod 755 /www/cgi-bin/enhanced-dhcp-api 2>/dev/null || true
+	
 	# Enable and start the service
-	/etc/init.d/enhanced_dhcp enable
-	/etc/init.d/enhanced_dhcp start
+	/etc/init.d/enhanced_dhcp enable 2>/dev/null || true
+	/etc/init.d/enhanced_dhcp start 2>/dev/null || true
 	
 	# Set up web server configuration if needed
 	if [ -f /etc/config/uhttpd ]; then
 		# Ensure CGI support is enabled
-		uci -q get uhttpd.main.cgi_prefix >/dev/null || {
+		if ! uci -q get uhttpd.main.cgi_prefix >/dev/null 2>&1; then
 			uci set uhttpd.main.cgi_prefix='/cgi-bin'
 			uci commit uhttpd
-			/etc/init.d/uhttpd restart
-		}
+			/etc/init.d/uhttpd restart 2>/dev/null || true
+		fi
 	fi
 	
 	echo "Enhanced DHCP Manager v2.0 installed successfully!"
