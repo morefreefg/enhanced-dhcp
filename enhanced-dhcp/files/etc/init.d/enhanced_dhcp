@@ -1,13 +1,12 @@
 #!/bin/sh /etc/rc.common
 
-# Enhanced DHCP Manager Init Script
-# Compatible with all OpenWrt versions (19.07+)
+# Enhanced DHCP Manager v2.0 - HTML Edition Init Script
+# Simplified version with no LuCI dependencies
 
 START=60
 STOP=15
 
 CONFIG_FILE="/etc/config/enhanced_dhcp"
-PID_FILE="/var/run/enhanced_dhcp.pid"
 LOG_FILE="/var/log/enhanced_dhcp.log"
 
 start_service() {
@@ -17,11 +16,10 @@ start_service() {
 		create_default_config
 	}
 	
-	# Ensure log directory exists with proper permissions
+	# Ensure log directory exists
 	mkdir -p $(dirname $LOG_FILE) 2>/dev/null || true
-	chmod 755 $(dirname $LOG_FILE) 2>/dev/null || true
 	
-	# Create log file with restricted permissions if it doesn't exist
+	# Create log file with proper permissions
 	[ ! -f "$LOG_FILE" ] && {
 		touch "$LOG_FILE" 2>/dev/null || true
 		chmod 640 "$LOG_FILE" 2>/dev/null || true
@@ -30,12 +28,13 @@ start_service() {
 	# Initialize enhanced DHCP settings
 	init_enhanced_dhcp
 	
-	log_message "info" "Enhanced DHCP service started"
-	echo "Enhanced DHCP service started"
+	log_message "info" "Enhanced DHCP Manager v2.0 started"
+	echo "Enhanced DHCP Manager v2.0 started"
 }
 
 stop_service() {
-	echo "Enhanced DHCP service stopped"
+	log_message "info" "Enhanced DHCP Manager v2.0 stopped"
+	echo "Enhanced DHCP Manager v2.0 stopped"
 }
 
 reload_service() {
@@ -52,7 +51,7 @@ create_default_config() {
 	uci -q batch <<-EOF
 		set enhanced_dhcp.global=global
 		set enhanced_dhcp.global.initialized='1'
-		set enhanced_dhcp.global.version='1.0.0'
+		set enhanced_dhcp.global.version='2.0.0'
 		set enhanced_dhcp.global.auto_discovery='1'
 		set enhanced_dhcp.global.log_level='info'
 		
@@ -82,90 +81,32 @@ create_default_config() {
 init_enhanced_dhcp() {
 	local enabled
 	local auto_discovery
-	local backup_enabled
 	
 	# Load configuration
 	config_load enhanced_dhcp
 	
 	config_get enabled global initialized
 	config_get auto_discovery settings enable_device_discovery
-	config_get backup_enabled settings backup_on_change
 	
 	# Ensure essential settings are applied
 	if [ "$enabled" = "1" ]; then
-		log_message "info" "Enhanced DHCP is enabled"
-		
-		# Setup automatic device discovery if enabled
-		if [ "$auto_discovery" = "1" ]; then
-			setup_device_discovery
-		fi
-		
-		# Setup configuration backup if enabled
-		if [ "$backup_enabled" = "1" ]; then
-			setup_config_backup
-		fi
+		log_message "info" "Enhanced DHCP Manager v2.0 is enabled"
 		
 		# Validate DHCP configuration
 		validate_dhcp_config
 		
-		# Apply any pending configuration changes
-		apply_pending_changes
+		# Setup web interface permissions
+		setup_web_permissions
+		
 	else
-		log_message "warn" "Enhanced DHCP is not properly initialized"
+		log_message "warn" "Enhanced DHCP Manager is not properly initialized"
 	fi
-}
-
-setup_device_discovery() {
-	local discovery_interval
-	config_get discovery_interval settings discovery_interval
-	
-	# Create discovery script if it doesn't exist
-	cat > /usr/share/dhcp_manager/discovery.sh <<-EOF
-#!/bin/sh
-# Enhanced DHCP Device Discovery Script
-LOGFILE="/var/log/enhanced_dhcp.log"
-echo "\$(date): Running device discovery" >> \$LOGFILE
-# Add discovery logic here if needed
-EOF
-	
-	chmod +x /usr/share/dhcp_manager/discovery.sh
-	log_message "info" "Device discovery enabled with interval: ${discovery_interval}s"
-}
-
-setup_config_backup() {
-	local max_backups
-	config_get max_backups settings max_backup_files
-	
-	# Create backup directory
-	mkdir -p /etc/config/enhanced_dhcp_backups
-	
-	# Create backup script
-	cat > /usr/share/dhcp_manager/backup.sh <<-EOF
-#!/bin/sh
-# Enhanced DHCP Configuration Backup Script
-BACKUP_DIR="/etc/config/enhanced_dhcp_backups"
-TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
-
-# Backup current configuration
-cp /etc/config/dhcp "\$BACKUP_DIR/dhcp_\$TIMESTAMP.backup"
-cp /etc/config/enhanced_dhcp "\$BACKUP_DIR/enhanced_dhcp_\$TIMESTAMP.backup"
-
-# Clean old backups (keep only max_backups files)
-cd "\$BACKUP_DIR"
-ls -t dhcp_*.backup | tail -n +$((max_backups + 1)) | xargs rm -f 2>/dev/null || true
-ls -t enhanced_dhcp_*.backup | tail -n +$((max_backups + 1)) | xargs rm -f 2>/dev/null || true
-
-echo "\$(date): Configuration backup created" >> /var/log/enhanced_dhcp.log
-EOF
-	
-	chmod +x /usr/share/dhcp_manager/backup.sh
-	log_message "info" "Configuration backup enabled (max: $max_backups files)"
 }
 
 validate_dhcp_config() {
 	local error_count=0
 	
-	# Check for duplicate MAC addresses
+	# Check for duplicate MAC addresses in static hosts
 	local macs=$(uci show dhcp 2>/dev/null | grep "\.mac=" | cut -d"'" -f2 | sort 2>/dev/null || true)
 	local duplicate_macs=$(echo "$macs" | uniq -d 2>/dev/null || true)
 	
@@ -174,7 +115,7 @@ validate_dhcp_config() {
 		error_count=$((error_count + 1))
 	fi
 	
-	# Check for invalid tag references (simplified for compatibility)
+	# Check for invalid tag references
 	uci -q foreach dhcp host '
 		tag=$(uci -q get dhcp.$1.tag 2>/dev/null || true)
 		if [ -n "$tag" ] && [ "$tag" != "default" ]; then
@@ -194,19 +135,17 @@ validate_dhcp_config() {
 	return $error_count
 }
 
-apply_pending_changes() {
-	# Check if there are any pending changes that need to be applied
-	local needs_restart=0
+setup_web_permissions() {
+	# Ensure CGI script is executable
+	chmod +x /www/cgi-bin/enhanced-dhcp-api 2>/dev/null || true
 	
-	# Check if dnsmasq needs restart
-	if [ -f /tmp/enhanced_dhcp_restart_needed ]; then
-		log_message "info" "Applying pending DHCP changes"
-		/etc/init.d/dnsmasq restart
-		rm -f /tmp/enhanced_dhcp_restart_needed
-		needs_restart=1
-	fi
+	# Ensure web files have proper permissions
+	chmod 644 /www/enhanced-dhcp/*.html 2>/dev/null || true
+	chmod 644 /www/enhanced-dhcp/*.css 2>/dev/null || true
+	chmod 644 /www/enhanced-dhcp/*.js 2>/dev/null || true
+	chmod 644 /www/enhanced-dhcp/*.json 2>/dev/null || true
 	
-	return $needs_restart
+	log_message "info" "Web interface permissions configured"
 }
 
 log_message() {
@@ -235,7 +174,7 @@ log_message() {
 
 rotate_log_if_needed() {
 	local max_size
-	config_get max_size logging max_log_size
+	config_get max_size logging max_log_size 2>/dev/null || max_size="1024"
 	
 	if [ -f "$LOG_FILE" ]; then
 		local size_kb=$(du -k "$LOG_FILE" | cut -f1)
@@ -247,26 +186,26 @@ rotate_log_if_needed() {
 	fi
 }
 
-# Service management functions
-service_triggers() {
-	procd_add_reload_trigger "enhanced_dhcp"
-	procd_add_reload_trigger "dhcp"
-}
-
-# Handle UCI configuration changes
-config_changed() {
-	log_message "info" "Configuration changed, marking for restart"
-	touch /tmp/enhanced_dhcp_restart_needed
-}
-
-# Backup configuration before making changes
-backup_config() {
-	local backup_enabled
-	config_get backup_enabled settings backup_on_change
+# Status function
+status() {
+	echo "Enhanced DHCP Manager v2.0 Status:"
+	echo "=================================="
 	
-	if [ "$backup_enabled" = "1" ] && [ -x /usr/share/dhcp_manager/backup.sh ]; then
-		/usr/share/dhcp_manager/backup.sh
+	local enabled
+	config_get enabled global initialized 2>/dev/null || enabled="0"
+	echo "Status: $([ "$enabled" = "1" ] && echo "Enabled" || echo "Disabled")"
+	
+	if [ -f "$LOG_FILE" ]; then
+		echo "Log file: $LOG_FILE ($(du -h "$LOG_FILE" | cut -f1))"
+		echo "Last 5 log entries:"
+		tail -5 "$LOG_FILE" 2>/dev/null | sed 's/^/  /' || echo "  (no log entries)"
+	else
+		echo "Log file: Not found"
 	fi
+	
+	echo ""
+	echo "Web Interface: http://[router-ip]/enhanced-dhcp/"
+	echo "API Endpoint: http://[router-ip]/cgi-bin/enhanced-dhcp-api"
 }
 
 # Health check function
@@ -275,40 +214,16 @@ health_check() {
 	local result=$?
 	
 	if [ $result -eq 0 ]; then
-		echo "Enhanced DHCP: Healthy"
+		echo "Enhanced DHCP Manager v2.0: Healthy"
 	else
-		echo "Enhanced DHCP: Issues detected ($result errors)"
+		echo "Enhanced DHCP Manager v2.0: Issues detected ($result errors)"
 	fi
 	
 	return $result
 }
 
-# Status function
-status() {
-	echo "Enhanced DHCP Status:"
-	echo "===================="
-	
-	local enabled
-	config_get enabled global initialized
-	echo "Status: $([ "$enabled" = "1" ] && echo "Enabled" || echo "Disabled")"
-	
-	if [ -f "$LOG_FILE" ]; then
-		echo "Log file: $LOG_FILE ($(du -h "$LOG_FILE" | cut -f1))"
-		echo "Last 5 log entries:"
-		tail -5 "$LOG_FILE" | sed 's/^/  /'
-	else
-		echo "Log file: Not found"
-	fi
-	
-	echo ""
-	health_check
-}
-
 # Command handling
 case "$1" in
-	backup)
-		backup_config
-		;;
 	health)
 		health_check
 		;;
@@ -316,6 +231,6 @@ case "$1" in
 		status
 		;;
 	*)
-		# Default behavior
+		# Default procd behavior
 		;;
 esac

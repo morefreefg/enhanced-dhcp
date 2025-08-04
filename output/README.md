@@ -12,7 +12,7 @@ This is a complete rewrite of the Enhanced DHCP Manager using pure HTML/CSS/Java
 
 ## Installation
 ```bash
-opkg install luci-app-enhanced-dhcp-v2_2.0.0-1_all.ipk
+opkg install luci-app-enhanced-dhcp_2.0.0-1_all.ipk
 ```
 
 ## Web Interface
@@ -51,5 +51,5 @@ Access the interface at: http://[router-ip]/enhanced-dhcp/
 
 ## Build Information
 - Version: 2.0.0
-- Build Date: Tue Aug  5 00:02:46 CST 2025
+- Build Date: Tue Aug  5 00:07:09 CST 2025
 - Package Size:  20K
