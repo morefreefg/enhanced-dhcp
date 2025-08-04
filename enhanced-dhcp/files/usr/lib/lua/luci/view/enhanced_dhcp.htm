@@ -8,40 +8,51 @@
 }
 
 .enhanced-dhcp-header {
-    text-align: center;
     margin-bottom: 2rem;
-    padding: 1rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 8px;
+    padding: 1rem 0;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.enhanced-dhcp-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.enhanced-dhcp-header p {
+    margin: 0.5rem 0 0 0;
+    color: #6b7280;
+    font-size: 0.875rem;
 }
 
 .enhanced-dhcp-tabs {
     display: flex;
-    gap: 0.5rem;
+    gap: 0;
     margin-bottom: 2rem;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 1px solid #d1d5db;
 }
 
 .enhanced-dhcp-tab-button {
     padding: 0.75rem 1.5rem;
     background: none;
     border: none;
-    border-radius: 8px 8px 0 0;
+    border-bottom: 2px solid transparent;
     cursor: pointer;
     font-weight: 500;
     transition: all 0.2s;
-    color: #64748b;
+    color: #6b7280;
+    font-size: 0.875rem;
 }
 
 .enhanced-dhcp-tab-button.active {
-    background: #3b82f6;
-    color: white;
+    color: #374151;
+    border-bottom-color: #374151;
 }
 
 .enhanced-dhcp-tab-button:hover:not(.active) {
-    background: #f1f5f9;
-    color: #334155;
+    color: #4b5563;
+    background: #f9fafb;
 }
 
 .enhanced-dhcp-tab-content {
@@ -60,44 +71,39 @@
 }
 
 .enhanced-dhcp-stat-card {
-    background: white;
+    background: #f9fafb;
     padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
     text-align: center;
-    border: 1px solid #e2e8f0;
-}
-
-.enhanced-dhcp-stat-icon {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
 }
 
 .enhanced-dhcp-stat-value {
     font-size: 2rem;
     font-weight: bold;
     margin-bottom: 0.25rem;
-    color: #1e293b;
+    color: #111827;
 }
 
 .enhanced-dhcp-stat-label {
-    color: #64748b;
+    color: #6b7280;
     font-size: 0.875rem;
+    font-weight: 500;
 }
 
 .enhanced-dhcp-section {
-    background: white;
+    background: #ffffff;
     padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
     margin-bottom: 1.5rem;
-    border: 1px solid #e2e8f0;
 }
 
 .enhanced-dhcp-section h2 {
     margin: 0 0 1rem 0;
-    color: #1e293b;
-    font-size: 1.25rem;
+    color: #374151;
+    font-size: 1.125rem;
+    font-weight: 600;
 }
 
 .enhanced-dhcp-table {
@@ -110,79 +116,117 @@
 .enhanced-dhcp-table td {
     padding: 0.75rem;
     text-align: left;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .enhanced-dhcp-table th {
-    background: #f8fafc;
+    background: #f9fafb;
     font-weight: 600;
     color: #374151;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .enhanced-dhcp-table tr:hover {
-    background: #f8fafc;
+    background: #f9fafb;
 }
 
 .enhanced-dhcp-button {
     padding: 0.5rem 1rem;
-    border: none;
+    border: 1px solid #d1d5db;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 500;
     transition: all 0.2s;
+    background: #ffffff;
+    color: #374151;
 }
 
-.enhanced-dhcp-button-primary {
-    background: #3b82f6;
-    color: white;
-}
-
-.enhanced-dhcp-button-primary:hover {
-    background: #2563eb;
+.enhanced-dhcp-button:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
 }
 
 .enhanced-dhcp-loading {
     text-align: center;
     padding: 2rem;
-    color: #64748b;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.enhanced-dhcp-error {
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid #fecaca;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+    .enhanced-dhcp-container {
+        padding: 0 1rem;
+    }
+    
+    .enhanced-dhcp-tabs {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .enhanced-dhcp-tab-button {
+        border-bottom: 1px solid #e5e7eb;
+        border-radius: 0;
+    }
+    
+    .enhanced-dhcp-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .enhanced-dhcp-table {
+        font-size: 0.75rem;
+    }
+    
+    .enhanced-dhcp-table th,
+    .enhanced-dhcp-table td {
+        padding: 0.5rem;
+    }
 }
 </style>
 
 <div class="enhanced-dhcp-container">
     <div class="enhanced-dhcp-header">
-        <h1>🌐 Enhanced DHCP Manager</h1>
+        <h1>Enhanced DHCP Manager</h1>
         <p>Manage DHCP settings and device assignments</p>
     </div>
 
     <nav class="enhanced-dhcp-tabs">
-        <button class="enhanced-dhcp-tab-button active" data-tab="overview">📊 Overview</button>
-        <button class="enhanced-dhcp-tab-button" data-tab="devices">💻 Devices</button>
-        <button class="enhanced-dhcp-tab-button" data-tab="tags">🏷️ Tags</button>
+        <button class="enhanced-dhcp-tab-button active" data-tab="overview">Overview</button>
+        <button class="enhanced-dhcp-tab-button" data-tab="devices">Devices</button>
+        <button class="enhanced-dhcp-tab-button" data-tab="tags">Tags</button>
     </nav>
 
     <!-- Overview Tab -->
     <div id="enhanced-dhcp-overview" class="enhanced-dhcp-tab-content active">
         <div class="enhanced-dhcp-stats-grid">
             <div class="enhanced-dhcp-stat-card">
-                <div class="enhanced-dhcp-stat-icon">🏷️</div>
                 <div class="enhanced-dhcp-stat-value" id="enhanced-dhcp-total-tags">-</div>
                 <div class="enhanced-dhcp-stat-label">DHCP Tags</div>
             </div>
             <div class="enhanced-dhcp-stat-card">
-                <div class="enhanced-dhcp-stat-icon">💻</div>
                 <div class="enhanced-dhcp-stat-value" id="enhanced-dhcp-total-devices">-</div>
                 <div class="enhanced-dhcp-stat-label">Total Devices</div>
             </div>
             <div class="enhanced-dhcp-stat-card">
-                <div class="enhanced-dhcp-stat-icon">🟢</div>
                 <div class="enhanced-dhcp-stat-value" id="enhanced-dhcp-online-devices">-</div>
                 <div class="enhanced-dhcp-stat-label">Online Devices</div>
             </div>
         </div>
 
         <div class="enhanced-dhcp-section">
-            <h2>🔗 Current DHCP Leases</h2>
+            <h2>Current DHCP Leases</h2>
             <div id="enhanced-dhcp-leases-loading" class="enhanced-dhcp-loading">Loading leases...</div>
             <table id="enhanced-dhcp-leases-table" class="enhanced-dhcp-table" style="display: none;">
                 <thead>
@@ -202,7 +246,7 @@
     <!-- Devices Tab -->
     <div id="enhanced-dhcp-devices" class="enhanced-dhcp-tab-content">
         <div class="enhanced-dhcp-section">
-            <h2>💻 Device Management</h2>
+            <h2>Device Management</h2>
             <div id="enhanced-dhcp-devices-loading" class="enhanced-dhcp-loading">Loading devices...</div>
             <table id="enhanced-dhcp-devices-table" class="enhanced-dhcp-table" style="display: none;">
                 <thead>
@@ -224,7 +268,7 @@
     <!-- Tags Tab -->
     <div id="enhanced-dhcp-tags" class="enhanced-dhcp-tab-content">
         <div class="enhanced-dhcp-section">
-            <h2>🏷️ DHCP Tags Configuration</h2>
+            <h2>DHCP Tags Configuration</h2>
             <div id="enhanced-dhcp-tags-loading" class="enhanced-dhcp-loading">Loading tags...</div>
             <table id="enhanced-dhcp-tags-table" class="enhanced-dhcp-table" style="display: none;">
                 <thead>
@@ -333,7 +377,7 @@
                                "<td>" + (device.ip || "Auto") + "</td>" +
                                "<td>" + (device.tag || "default") + "</td>" +
                                "<td>" + (device.type || "unknown") + "</td>" +
-                               "<td><button class='enhanced-dhcp-button enhanced-dhcp-button-primary'>Edit</button></td>";
+                               "<td><button class='enhanced-dhcp-button'>Edit</button></td>";
                 tbody.appendChild(row);
             });
             table.style.display = "table";
@@ -359,7 +403,7 @@
                                "<td>" + (tag.description || "-") + "</td>" +
                                "<td>" + (tag.gateway || "-") + "</td>" +
                                "<td>" + (tag.dns || "-") + "</td>" +
-                               "<td><button class='enhanced-dhcp-button enhanced-dhcp-button-primary'>Edit</button></td>";
+                               "<td><button class='enhanced-dhcp-button'>Edit</button></td>";
                 tbody.appendChild(row);
             });
             table.style.display = "table";
