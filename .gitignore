@@ -29,3 +29,6 @@ Thumbs.db
 
 # Personal test scripts
 test-install.sh
+
+# Personal project documentation
+CLAUDE.md
