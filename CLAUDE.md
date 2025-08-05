@@ -3,6 +3,19 @@
 ## Project Overview
 This is a LuCI application for OpenWrt that provides enhanced DHCP management functionality. The project creates a universal IPK package that can run on all OpenWrt platforms.
 
+## 📋 Code Documentation
+**IMPORTANT**: For detailed understanding of the codebase, architecture, and file purposes, see: [CODE_DOCUMENTATION.md](./CODE_DOCUMENTATION.md)
+
+The code documentation provides comprehensive information about:
+- Project architecture and dual interface design
+- Detailed file-by-file explanations
+- API endpoints and functionality
+- Build system and deployment workflow
+- Security considerations and compatibility strategy
+- Development patterns and best practices
+
+@CODE_DOCUMENTATION.md - Reference this file to quickly understand the entire codebase structure and implementation details.
+
 ## Target Device
 - IP: 192.168.10.2
 - User: root
