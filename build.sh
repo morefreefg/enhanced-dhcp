@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Enhanced DHCP Manager v2.0 - HTML Edition Build Script
-# Builds a LuCI-independent IPK package for all OpenWrt platforms
+# Enhanced DHCP Manager v2.0 - LuCI Integration Build Script
+# Builds a LuCI-integrated IPK package for all OpenWrt platforms
 
 set -e
 
@@ -52,9 +52,6 @@ validate_sources() {
     local required_files=(
         "$SCRIPT_DIR/$PROJECT_NAME/Makefile"
         "$SCRIPT_DIR/$PROJECT_NAME/files/www/cgi-bin/enhanced-dhcp-api"
-        "$SCRIPT_DIR/$PROJECT_NAME/files/www/enhanced-dhcp/index.html"
-        "$SCRIPT_DIR/$PROJECT_NAME/files/www/enhanced-dhcp/style.css"
-        "$SCRIPT_DIR/$PROJECT_NAME/files/www/enhanced-dhcp/script.js"
         "$SCRIPT_DIR/$PROJECT_NAME/files/etc/config/enhanced_dhcp"
         "$SCRIPT_DIR/$PROJECT_NAME/files/etc/init.d/enhanced_dhcp"
         "$SCRIPT_DIR/$PROJECT_NAME/files/usr/lib/lua/luci/controller/enhanced_dhcp.lua"
@@ -93,26 +90,26 @@ create_control_file() {
     cat > "$BUILD_DIR/CONTROL/control" << EOF
 Package: $PACKAGE_NAME
 Version: $VERSION-1
-Description: Enhanced DHCP Manager v2.0 - HTML Edition
- A modern, LuCI-independent DHCP management interface built with pure HTML/CSS/JS.
+Description: Enhanced DHCP Manager v2.0 - LuCI Integration
+ A modern DHCP management interface integrated with LuCI admin panel.
  .
  Features:
- - Pure HTML frontend (no LuCI dependencies)
+ - Full LuCI integration in Network section
  - Real-time DHCP lease monitoring  
  - Device auto-discovery and classification
  - DHCP tag management for different network policies
  - Responsive web interface
  - Compatible with all OpenWrt versions
  .
- This version eliminates LuCI compatibility issues by using a standalone
- CGI backend and modern web technologies for the frontend.
+ This version provides comprehensive DHCP management functionality
+ through the standard LuCI web interface.
 Section: luci
 Priority: optional
 Maintainer: Enhanced DHCP Team <support@enhanced-dhcp.org>
 License: MIT
 Architecture: all
 Installed-Size: $(du -sb "$SCRIPT_DIR/$PROJECT_NAME/files" | cut -f1)
-Depends: uhttpd, uhttpd-mod-ubus
+Depends: uhttpd, uhttpd-mod-ubus, luci-base
 Source: N/A
 SourceName: $PACKAGE_NAME
 EOF
@@ -144,13 +141,14 @@ if [ -f /etc/config/uhttpd ]; then
 fi
 
 echo "Enhanced DHCP Manager v2.0 installed successfully!"
-echo "Access the web interface at: http://[router-ip]/enhanced-dhcp/"
+echo "Access via LuCI web interface: Network → Enhanced DHCP"
+echo "Direct URL: http://[router-ip]/cgi-bin/luci/admin/network/enhanced_dhcp"
 echo ""
 echo "Key improvements in v2.0:"
-echo "- No LuCI dependencies (eliminates compatibility issues)"
-echo "- Modern HTML/CSS/JS frontend"
-echo "- Better performance and stability"
-echo "- Compatible with all OpenWrt versions"
+echo "- Full LuCI integration in Network section"
+echo "- Complete device management and tag assignment"
+echo "- Modern responsive interface"
+echo "- Real-time DHCP monitoring"
 
 exit 0
 EOF
@@ -274,7 +272,7 @@ main() {
     echo ""
     log_info "To install: opkg install $OUTPUT_DIR/${PACKAGE_NAME}_${VERSION}-1_all.ipk"
     log_info "To test: ./test.sh"
-    log_info "Web interface: http://[router-ip]/enhanced-dhcp/"
+    log_info "LuCI interface: Network → Enhanced DHCP"
 }
 
 # Run main function

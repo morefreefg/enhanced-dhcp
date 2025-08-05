@@ -309,8 +309,8 @@ get_devices() {
     get_dhcp_hosts | sed 's/^\[//; s/\]$//; s/},{/}\
 {/g' | while IFS= read -r host_json; do
         if [ -n "$host_json" ] && [ "$host_json" != "{" ] && [ "$host_json" != "}" ]; then
-            # Add type field to static hosts
-            echo "${host_json%\}},\"type\":\"static\"}"
+            # Add type and has_config fields to static hosts
+            echo "${host_json%\}},\"type\":\"static\",\"has_config\":true}"
         fi
     done > "$temp_file"
     
@@ -326,7 +326,7 @@ get_devices() {
                 
                 # Check if MAC already exists in static hosts
                 if ! grep -q "\"$macaddr\"" "$temp_file" 2>/dev/null; then
-                    echo "{\"mac\":\"$macaddr\",\"name\":\"Unknown\",\"ip\":\"$ipaddr\",\"tag\":\"default\",\"type\":\"arp\"}"
+                    echo "{\"mac\":\"$macaddr\",\"name\":\"Unknown\",\"ip\":\"$ipaddr\",\"tag\":\"default\",\"type\":\"arp\",\"has_config\":false}"
                 fi
             fi
         done >> "$temp_file"
@@ -433,6 +433,38 @@ apply_tag() {
     return 1
 }
 
+# Delete device assignment (remove DHCP host entry)
+delete_assignment() {
+    local mac="$1"
+    
+    # Validate MAC address
+    if ! echo "$mac" | grep -qE '^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$'; then
+        json_error "Invalid MAC address format"
+        return 1
+    fi
+    
+    # Try UCI if available
+    if command -v uci >/dev/null 2>&1; then
+        local deleted=false
+        
+        # Find and remove host entries with matching MAC
+        uci show dhcp 2>/dev/null | grep "\.mac='$mac'" | cut -d. -f2 | cut -d= -f1 | while read section; do
+            uci delete "dhcp.$section" 2>/dev/null
+            deleted=true
+        done
+        
+        if uci commit dhcp 2>/dev/null; then
+            log_message "Deleted DHCP assignment for device $mac"
+            (/etc/init.d/dnsmasq restart >/dev/null 2>&1) &
+            json_success '"Device assignment deleted successfully"'
+            return 0
+        fi
+    fi
+    
+    json_error "Configuration update not supported without UCI"
+    return 1
+}
+
 # Parse request
 REQUEST_METHOD="${REQUEST_METHOD:-GET}"
 QUERY_STRING="${QUERY_STRING:-}"
@@ -498,6 +530,13 @@ case "$REQUEST_METHOD" in
                     apply_tag "$PARAM_mac" "$PARAM_tag" "$PARAM_name"
                 else
                     json_error "Missing required parameters: mac, tag"
+                fi
+                ;;
+            "/delete_assignment")
+                if [ -n "$PARAM_mac" ]; then
+                    delete_assignment "$PARAM_mac"
+                else
+                    json_error "Missing required parameter: mac"
                 fi
                 ;;
             *)

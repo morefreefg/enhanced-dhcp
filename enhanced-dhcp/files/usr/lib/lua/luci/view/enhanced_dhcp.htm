@@ -1,6 +1,20 @@
 <%+header%>
 
 <style>
+:root {
+    --primary-color: #6c757d;
+    --secondary-color: #868e96;
+    --success-color: #6c757d;
+    --danger-color: #6c757d;
+    --warning-color: #6c757d;
+    --info-color: #6c757d;
+    --light-color: #f8f9fa;
+    --dark-color: #495057;
+    --border-radius: 4px;
+    --box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    --transition: all 0.2s ease;
+}
+
 .enhanced-dhcp-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -8,51 +22,61 @@
 }
 
 .enhanced-dhcp-header {
-    margin-bottom: 2rem;
-    padding: 1rem 0;
-    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dee2e6;
 }
 
 .enhanced-dhcp-header h1 {
-    margin: 0;
     font-size: 1.5rem;
-    font-weight: 600;
-    color: #374151;
+    margin: 0 0 5px 0;
+    font-weight: 500;
+    color: var(--dark-color);
 }
 
 .enhanced-dhcp-header p {
-    margin: 0.5rem 0 0 0;
-    color: #6b7280;
-    font-size: 0.875rem;
+    font-size: 0.9rem;
+    margin: 0;
+    color: var(--secondary-color);
 }
 
 .enhanced-dhcp-tabs {
     display: flex;
-    gap: 0;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid #d1d5db;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    overflow: hidden;
+    position: relative;
 }
 
 .enhanced-dhcp-tab-button {
-    padding: 0.75rem 1.5rem;
-    background: none;
+    flex: 1;
+    padding: 10px 15px;
     border: none;
-    border-bottom: 2px solid transparent;
+    background: transparent;
     cursor: pointer;
+    font-size: 0.9rem;
     font-weight: 500;
-    transition: all 0.2s;
-    color: #6b7280;
-    font-size: 0.875rem;
+    color: #333;
+    transition: var(--transition);
+    border-right: 1px solid #dee2e6;
 }
 
-.enhanced-dhcp-tab-button.active {
-    color: #374151;
-    border-bottom-color: #374151;
+.enhanced-dhcp-tab-button:last-child {
+    border-right: none;
 }
 
 .enhanced-dhcp-tab-button:hover:not(.active) {
-    color: #4b5563;
-    background: #f9fafb;
+    background: #e9ecef;
+}
+
+.enhanced-dhcp-tab-button.active {
+    background: #e6f3ff !important;
+    color: #333 !important;
+    border-bottom: 3px solid #4a90e2 !important;
+    font-weight: 600 !important;
+    box-shadow: inset 0 -3px 0 #4a90e2 !important;
 }
 
 .enhanced-dhcp-tab-content {
@@ -66,134 +90,506 @@
 .enhanced-dhcp-stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
+    gap: 20px;
+    margin-bottom: 30px;
 }
 
 .enhanced-dhcp-stat-card {
-    background: #f9fafb;
-    padding: 1.5rem;
-    border-radius: 6px;
-    border: 1px solid #e5e7eb;
+    background: white;
+    padding: 25px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
     text-align: center;
+    transition: var(--transition);
 }
+
+.enhanced-dhcp-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
 
 .enhanced-dhcp-stat-value {
     font-size: 2rem;
     font-weight: bold;
-    margin-bottom: 0.25rem;
-    color: #111827;
+    color: var(--primary-color);
+    margin-bottom: 5px;
 }
 
 .enhanced-dhcp-stat-label {
-    color: #6b7280;
-    font-size: 0.875rem;
-    font-weight: 500;
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .enhanced-dhcp-section {
-    background: #ffffff;
-    padding: 1.5rem;
-    border-radius: 6px;
-    border: 1px solid #e5e7eb;
-    margin-bottom: 1.5rem;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.enhanced-dhcp-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    background: var(--light-color);
+}
+
+.enhanced-dhcp-section-header h2 {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--dark-color);
+    margin: 0;
+}
+
+.enhanced-dhcp-section-actions {
+    display: flex;
+    gap: 10px;
 }
 
 .enhanced-dhcp-section h2 {
-    margin: 0 0 1rem 0;
-    color: #374151;
-    font-size: 1.125rem;
-    font-weight: 600;
+    padding: 20px;
+    margin: 0;
+    background: var(--light-color);
+    border-bottom: 1px solid #eee;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.enhanced-dhcp-section h3 {
+    padding: 15px 20px;
+    margin: 0;
+    background: var(--light-color);
+    border-bottom: 1px solid #eee;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.enhanced-dhcp-table-container {
+    overflow-x: auto;
 }
 
 .enhanced-dhcp-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.875rem;
+    font-size: 0.9rem;
 }
 
 .enhanced-dhcp-table th,
 .enhanced-dhcp-table td {
-    padding: 0.75rem;
+    padding: 12px 15px;
     text-align: left;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #eee;
 }
 
 .enhanced-dhcp-table th {
-    background: #f9fafb;
-    font-weight: 600;
-    color: #374151;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    background: var(--light-color);
+    font-weight: 500;
+    color: var(--dark-color);
+    position: sticky;
+    top: 0;
 }
 
 .enhanced-dhcp-table tr:hover {
-    background: #f9fafb;
-}
-
-.enhanced-dhcp-button {
-    padding: 0.5rem 1rem;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.75rem;
-    font-weight: 500;
-    transition: all 0.2s;
-    background: #ffffff;
-    color: #374151;
-}
-
-.enhanced-dhcp-button:hover {
-    background: #f3f4f6;
-    border-color: #9ca3af;
+    background: #f9f9f9;
 }
 
 .enhanced-dhcp-loading {
     text-align: center;
-    padding: 2rem;
-    color: #6b7280;
+    color: var(--secondary-color);
     font-style: italic;
+    padding: 40px;
 }
 
-.enhanced-dhcp-error {
-    background: #fef2f2;
-    color: #dc2626;
-    padding: 1rem;
+.enhanced-dhcp-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    border: none;
     border-radius: 4px;
-    border: 1px solid #fecaca;
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    white-space: nowrap;
+}
+
+.enhanced-dhcp-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.enhanced-dhcp-btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.enhanced-dhcp-btn-primary:hover:not(:disabled) {
+    background: #5a6268;
+}
+
+.enhanced-dhcp-btn-secondary {
+    background: #f8f9fa;
+    color: var(--dark-color);
+    border: 1px solid #dee2e6;
+}
+
+.enhanced-dhcp-btn-secondary:hover:not(:disabled) {
+    background: #e9ecef;
+}
+
+.enhanced-dhcp-btn-success {
+    background: var(--primary-color);
+    color: white;
+}
+
+.enhanced-dhcp-btn-success:hover:not(:disabled) {
+    background: #5a6268;
+}
+
+.enhanced-dhcp-btn-danger {
+    background: white;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+.enhanced-dhcp-btn-danger:hover:not(:disabled) {
+    background: #f8f9fa;
+    color: #c82333;
+    border-color: #c82333;
+}
+
+.enhanced-dhcp-btn-sm {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    margin-right: 5px;
+}
+
+.enhanced-dhcp-btn-sm:last-child {
+    margin-right: 0;
+}
+
+.enhanced-dhcp-filters {
+    display: flex;
+    gap: 15px;
+    padding: 20px;
+    background: var(--light-color);
+    border-bottom: 1px solid #eee;
+}
+
+.enhanced-dhcp-search-input, .enhanced-dhcp-filter-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.enhanced-dhcp-search-input {
+    flex: 1;
+    min-width: 200px;
+}
+
+.enhanced-dhcp-filter-select {
+    min-width: 150px;
+}
+
+.enhanced-dhcp-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.enhanced-dhcp-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.enhanced-dhcp-form-group label {
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.enhanced-dhcp-form-control {
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+}
+
+.enhanced-dhcp-form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.enhanced-dhcp-form-group small {
+    margin-top: 5px;
+    color: var(--secondary-color);
+    font-size: 0.8rem;
+}
+
+.enhanced-dhcp-form-actions {
+    display: flex;
+    gap: 10px;
+    padding: 20px;
+    border-top: 1px solid #eee;
+    background: var(--light-color);
+}
+
+.enhanced-dhcp-quick-assign-form {
+    padding: 20px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: var(--border-radius);
+    min-height: 280px;
+}
+
+.enhanced-dhcp-quick-assign-form .enhanced-dhcp-form-group {
+    margin-bottom: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.enhanced-dhcp-quick-assign-form .enhanced-dhcp-form-group:last-of-type {
+    margin-bottom: 25px;
+}
+
+.enhanced-dhcp-quick-assign-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.enhanced-dhcp-status-online {
+    color: var(--success-color);
+    font-weight: 500;
+}
+
+.enhanced-dhcp-status-offline {
+    color: var(--secondary-color);
+}
+
+.enhanced-dhcp-device-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.enhanced-dhcp-device-icon {
+    font-size: 1.2rem;
+}
+
+.enhanced-dhcp-tag-badge {
+    background: var(--primary-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+#enhanced-dhcp-status-messages {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    max-width: 400px;
+}
+
+.enhanced-dhcp-status-message {
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    box-shadow: var(--box-shadow);
+    animation: enhanced-dhcp-slideIn 0.3s ease;
+}
+
+.enhanced-dhcp-status-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.enhanced-dhcp-status-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.enhanced-dhcp-status-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.enhanced-dhcp-status-info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+@keyframes enhanced-dhcp-slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.enhanced-dhcp-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.enhanced-dhcp-modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+}
+
+.enhanced-dhcp-modal-content h3 {
+    margin-bottom: 15px;
+    color: var(--dark-color);
+}
+
+.enhanced-dhcp-modal-content p {
+    margin-bottom: 20px;
+    color: var(--secondary-color);
+}
+
+.enhanced-dhcp-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.enhanced-dhcp-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: enhanced-dhcp-spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes enhanced-dhcp-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 @media (max-width: 768px) {
     .enhanced-dhcp-container {
-        padding: 0 1rem;
+        padding: 10px;
+    }
+    
+    .enhanced-dhcp-header h1 {
+        font-size: 2rem;
     }
     
     .enhanced-dhcp-tabs {
         flex-direction: column;
-        gap: 0;
     }
     
     .enhanced-dhcp-tab-button {
-        border-bottom: 1px solid #e5e7eb;
-        border-radius: 0;
+        border-right: none;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .enhanced-dhcp-tab-button:last-child {
+        border-bottom: none;
     }
     
     .enhanced-dhcp-stats-grid {
         grid-template-columns: 1fr;
     }
     
+    .enhanced-dhcp-section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .enhanced-dhcp-section-actions {
+        justify-content: center;
+    }
+    
+    .enhanced-dhcp-filters {
+        flex-direction: column;
+    }
+    
+    .enhanced-dhcp-form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .enhanced-dhcp-form-actions {
+        flex-direction: column;
+    }
+    
     .enhanced-dhcp-table {
-        font-size: 0.75rem;
+        font-size: 0.8rem;
     }
     
     .enhanced-dhcp-table th,
     .enhanced-dhcp-table td {
-        padding: 0.5rem;
+        padding: 8px 10px;
+    }
+    
+    .enhanced-dhcp-quick-assign-form label {
+        width: auto;
+        margin-bottom: 5px;
+    }
+    
+    #enhanced-dhcp-status-messages {
+        left: 10px;
+        right: 10px;
+        max-width: none;
     }
 }
+
+@media (max-width: 480px) {
+    .enhanced-dhcp-btn {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .enhanced-dhcp-modal-content {
+        padding: 20px;
+    }
+    
+    .enhanced-dhcp-modal-actions {
+        flex-direction: column;
+    }
+}
+
+/* Utility Classes */
+.enhanced-dhcp-hidden { display: none !important; }
+.enhanced-dhcp-visible { display: block !important; }
 </style>
 
 <div class="enhanced-dhcp-container">
@@ -209,230 +605,995 @@
     </nav>
 
     <!-- Overview Tab -->
-    <div id="enhanced-dhcp-overview" class="enhanced-dhcp-tab-content active">
+    <div id="overview" class="enhanced-dhcp-tab-content active">
         <div class="enhanced-dhcp-stats-grid">
             <div class="enhanced-dhcp-stat-card">
-                <div class="enhanced-dhcp-stat-value" id="enhanced-dhcp-total-tags">-</div>
+                <div class="enhanced-dhcp-stat-value" id="total-tags">-</div>
                 <div class="enhanced-dhcp-stat-label">DHCP Tags</div>
             </div>
             <div class="enhanced-dhcp-stat-card">
-                <div class="enhanced-dhcp-stat-value" id="enhanced-dhcp-total-devices">-</div>
+                <div class="enhanced-dhcp-stat-value" id="total-devices">-</div>
                 <div class="enhanced-dhcp-stat-label">Total Devices</div>
             </div>
             <div class="enhanced-dhcp-stat-card">
-                <div class="enhanced-dhcp-stat-value" id="enhanced-dhcp-online-devices">-</div>
+                <div class="enhanced-dhcp-stat-value" id="online-devices">-</div>
                 <div class="enhanced-dhcp-stat-label">Online Devices</div>
             </div>
         </div>
 
         <div class="enhanced-dhcp-section">
             <h2>Current DHCP Leases</h2>
-            <div id="enhanced-dhcp-leases-loading" class="enhanced-dhcp-loading">Loading leases...</div>
-            <table id="enhanced-dhcp-leases-table" class="enhanced-dhcp-table" style="display: none;">
-                <thead>
-                    <tr>
-                        <th>Hostname</th>
-                        <th>IP Address</th>
-                        <th>MAC Address</th>
-                        <th>Lease Time</th>
-                    </tr>
-                </thead>
-                <tbody id="enhanced-dhcp-leases-tbody">
-                </tbody>
-            </table>
+            <div class="enhanced-dhcp-table-container">
+                <table id="leases-table" class="enhanced-dhcp-table">
+                    <thead>
+                        <tr>
+                            <th>Hostname</th>
+                            <th>IP Address</th>
+                            <th>MAC Address</th>
+                            <th>Lease Time</th>
+                            <th>DHCP Tag</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="5" class="enhanced-dhcp-loading">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="enhanced-dhcp-section">
+            <h2>Tags Summary</h2>
+            <div class="enhanced-dhcp-table-container">
+                <table id="tags-summary-table" class="enhanced-dhcp-table">
+                    <thead>
+                        <tr>
+                            <th>Tag Name</th>
+                            <th>Gateway</th>
+                            <th>DNS Servers</th>
+                            <th>Devices Using</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="4" class="enhanced-dhcp-loading">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Devices Tab -->
-    <div id="enhanced-dhcp-devices" class="enhanced-dhcp-tab-content">
+    <div id="devices" class="enhanced-dhcp-tab-content">
         <div class="enhanced-dhcp-section">
-            <h2>Device Management</h2>
-            <div id="enhanced-dhcp-devices-loading" class="enhanced-dhcp-loading">Loading devices...</div>
-            <table id="enhanced-dhcp-devices-table" class="enhanced-dhcp-table" style="display: none;">
-                <thead>
-                    <tr>
-                        <th>Device Name</th>
-                        <th>MAC Address</th>
-                        <th>IP Address</th>
-                        <th>DHCP Tag</th>
-                        <th>Type</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="enhanced-dhcp-devices-tbody">
-                </tbody>
-            </table>
+            <div class="enhanced-dhcp-section-header">
+                <h2>Device Management</h2>
+                <div class="enhanced-dhcp-section-actions">
+                    <button class="enhanced-dhcp-btn enhanced-dhcp-btn-secondary enhanced-dhcp-btn-sm" id="refresh-devices">Refresh</button>
+                    <button class="enhanced-dhcp-btn enhanced-dhcp-btn-primary enhanced-dhcp-btn-sm" id="discover-devices">Auto Discover</button>
+                </div>
+            </div>
+            
+            <div class="enhanced-dhcp-filters">
+                <input type="text" id="device-search" placeholder="Search devices..." class="enhanced-dhcp-search-input">
+                <select id="device-filter" class="enhanced-dhcp-filter-select">
+                    <option value="">All Devices</option>
+                    <option value="static">Static Only</option>
+                    <option value="lease">DHCP Leases</option>
+                    <option value="arp">ARP Only</option>
+                </select>
+            </div>
+
+            <div class="enhanced-dhcp-table-container">
+                <table id="devices-table" class="enhanced-dhcp-table">
+                    <thead>
+                        <tr>
+                            <th>Device</th>
+                            <th>MAC Address</th>
+                            <th>IP Address</th>
+                            <th>Status</th>
+                            <th>DHCP Tag</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="6" class="enhanced-dhcp-loading">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Quick Assignment Panel -->
+        <div class="enhanced-dhcp-section" id="quick-assign-panel" style="display: none;">
+            <h3>Quick Tag Assignment</h3>
+            <div class="enhanced-dhcp-quick-assign-form">
+                <div class="enhanced-dhcp-form-group">
+                    <label>Device:</label>
+                    <span id="quick-assign-device">-</span>
+                </div>
+                <div class="enhanced-dhcp-form-group">
+                    <label for="quick-assign-tag">DHCP Tag:</label>
+                    <select id="quick-assign-tag" class="enhanced-dhcp-form-control">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="enhanced-dhcp-form-group">
+                    <label for="quick-assign-name">Device Name:</label>
+                    <input type="text" id="quick-assign-name" class="enhanced-dhcp-form-control" placeholder="Enter device name">
+                </div>
+                <div class="enhanced-dhcp-form-actions">
+                    <button class="enhanced-dhcp-btn enhanced-dhcp-btn-primary" id="apply-tag-btn">Apply Tag</button>
+                    <button class="enhanced-dhcp-btn enhanced-dhcp-btn-secondary" id="cancel-assign-btn">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Tags Tab -->
-    <div id="enhanced-dhcp-tags" class="enhanced-dhcp-tab-content">
+    <div id="tags" class="enhanced-dhcp-tab-content">
         <div class="enhanced-dhcp-section">
-            <h2>DHCP Tags Configuration</h2>
-            <div id="enhanced-dhcp-tags-loading" class="enhanced-dhcp-loading">Loading tags...</div>
-            <table id="enhanced-dhcp-tags-table" class="enhanced-dhcp-table" style="display: none;">
-                <thead>
-                    <tr>
-                        <th>Tag Name</th>
-                        <th>Description</th>
-                        <th>Gateway</th>
-                        <th>DNS Server</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="enhanced-dhcp-tags-tbody">
-                </tbody>
-            </table>
+            <div class="enhanced-dhcp-section-header">
+                <h2>DHCP Tags Management</h2>
+                <button class="enhanced-dhcp-btn enhanced-dhcp-btn-primary" id="create-tag-btn">Create Tag</button>
+            </div>
+
+            <div class="enhanced-dhcp-table-container">
+                <table id="tags-table" class="enhanced-dhcp-table">
+                    <thead>
+                        <tr>
+                            <th>Tag Name</th>
+                            <th>Gateway</th>
+                            <th>DNS Servers</th>
+                            <th>Description</th>
+                            <th>Devices</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="6" class="enhanced-dhcp-loading">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Create Tag Form -->
+        <div class="enhanced-dhcp-section" id="create-tag-form" style="display: none;">
+            <h3>Create New DHCP Tag</h3>
+            <div class="enhanced-dhcp-form-grid">
+                <div class="enhanced-dhcp-form-group">
+                    <label for="tag-name">Tag Name*:</label>
+                    <input type="text" id="tag-name" class="enhanced-dhcp-form-control" 
+                           placeholder="e.g., guest_network" pattern="[a-zA-Z0-9_-]{2,32}" required>
+                    <small>2-32 characters, letters, numbers, underscore, hyphen only</small>
+                </div>
+                <div class="enhanced-dhcp-form-group">
+                    <label for="tag-gateway">Gateway IP:</label>
+                    <input type="text" id="tag-gateway" class="enhanced-dhcp-form-control" 
+                           placeholder="192.168.1.1" pattern="^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$">
+                </div>
+                <div class="enhanced-dhcp-form-group">
+                    <label for="tag-dns">DNS Servers:</label>
+                    <input type="text" id="tag-dns" class="enhanced-dhcp-form-control" 
+                           placeholder="8.8.8.8,8.8.4.4">
+                    <small>Comma-separated IP addresses</small>
+                </div>
+                <div class="enhanced-dhcp-form-group">
+                    <label for="tag-description">Description:</label>
+                    <input type="text" id="tag-description" class="enhanced-dhcp-form-control" 
+                           placeholder="Optional description">
+                </div>
+            </div>
+            <div class="enhanced-dhcp-form-actions">
+                <button class="enhanced-dhcp-btn enhanced-dhcp-btn-primary" id="save-tag-btn">Create Tag</button>
+                <button class="enhanced-dhcp-btn enhanced-dhcp-btn-secondary" id="cancel-tag-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="status-messages"></div>
+
+    <!-- Loading Modal -->
+    <div id="loading-modal" class="enhanced-dhcp-modal" style="display: none;">
+        <div class="enhanced-dhcp-modal-content">
+            <div class="enhanced-dhcp-spinner"></div>
+            <p>Processing...</p>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="enhanced-dhcp-modal" style="display: none;">
+        <div class="enhanced-dhcp-modal-content">
+            <h3 id="confirm-title">Confirm Action</h3>
+            <p id="confirm-message">Are you sure?</p>
+            <div class="enhanced-dhcp-modal-actions">
+                <button class="enhanced-dhcp-btn enhanced-dhcp-btn-danger" id="confirm-yes">Yes</button>
+                <button class="enhanced-dhcp-btn enhanced-dhcp-btn-secondary" id="confirm-no">No</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-(function() {
-    const API_BASE = "/cgi-bin/enhanced-dhcp-api";
-    
-    function initTabs() {
-        const tabButtons = document.querySelectorAll(".enhanced-dhcp-tab-button");
-        const tabContents = document.querySelectorAll(".enhanced-dhcp-tab-content");
-        
-        tabButtons.forEach(button => {
-            button.addEventListener("click", () => {
-                const targetTab = button.getAttribute("data-tab");
-                
-                tabButtons.forEach(btn => btn.classList.remove("active"));
-                tabContents.forEach(content => content.classList.remove("active"));
-                
-                button.classList.add("active");
-                const targetContent = document.getElementById("enhanced-dhcp-" + targetTab);
-                if (targetContent) {
-                    targetContent.classList.add("active");
+/**
+ * Enhanced DHCP Manager - LuCI Embedded Version
+ * Full functionality ported from standalone HTML version
+ */
+
+class EnhancedDHCPManager {
+    constructor() {
+        this.apiBase = '/cgi-bin/enhanced-dhcp-api';
+        this.deviceTypes = null;
+        this.deviceTypesData = {
+            "mac_prefixes": {
+                "00:0C:29": "VMware Virtual Machine",
+                "00:50:56": "VMware Virtual Machine",
+                "08:00:27": "VirtualBox Virtual Machine",
+                "52:54:00": "QEMU Virtual Machine",
+                "00:15:5D": "Microsoft Hyper-V",
+                "00:1C:42": "Parallels Virtual Machine",
+                "B8:27:EB": "Raspberry Pi Foundation",
+                "DC:A6:32": "Raspberry Pi Foundation",
+                "E4:5F:01": "Raspberry Pi Foundation",
+                "B0:BE:76": "Intel Corporate",
+                "00:1B:77": "Intel Corporate",
+                "18:03:73": "Dell Inc.",
+                "D4:BE:D9": "Dell Inc.",
+                "70:B3:D5": "IEEE Registration Authority",
+                "00:0D:3A": "Microsoft Corporation",
+                "00:03:FF": "Microsoft Corporation",
+                "28:18:78": "Apple Inc.",
+                "A8:86:DD": "Apple Inc.",
+                "00:22:58": "Apple Inc.",
+                "AC:DE:48": "Apple Inc.",
+                "F0:18:98": "Apple Inc.",
+                "3C:15:C2": "Apple Inc.",
+                "E8:06:88": "TP-Link Technologies",
+                "50:C7:BF": "TP-Link Technologies",
+                "A0:F3:C1": "TP-Link Technologies",
+                "00:1F:3F": "D-Link Corporation",
+                "00:26:5A": "D-Link Corporation",
+                "F8:1A:67": "D-Link Corporation",
+                "00:13:D4": "AzureWave Technology",
+                "04:BF:6D": "ASUSTek Computer",
+                "08:60:6E": "ASUSTek Computer",
+                "2C:56:DC": "ASUSTek Computer",
+                "00:22:B0": "D-Link Corporation",
+                "00:24:01": "D-Link Corporation"
+            },
+            "device_categories": {
+                "mobile": {
+                    "keywords": ["phone", "mobile", "android", "iphone", "samsung", "huawei", "xiaomi"],
+                    "icon": ""
+                },
+                "computer": {
+                    "keywords": ["laptop", "desktop", "pc", "macbook", "imac", "windows", "ubuntu"],
+                    "icon": ""
+                },
+                "tablet": {
+                    "keywords": ["ipad", "tablet", "surface"],
+                    "icon": ""
+                },
+                "iot": {
+                    "keywords": ["iot", "sensor", "smart", "camera", "doorbell", "thermostat"],
+                    "icon": ""
+                },
+                "network": {
+                    "keywords": ["router", "switch", "access", "point", "bridge", "extender"],
+                    "icon": ""
+                },
+                "printer": {
+                    "keywords": ["printer", "scanner", "hp", "canon", "epson", "brother"],
+                    "icon": ""
+                },
+                "tv": {
+                    "keywords": ["tv", "roku", "chromecast", "appletv", "firestick"],
+                    "icon": ""
+                },
+                "gaming": {
+                    "keywords": ["xbox", "playstation", "nintendo", "steam", "console"],
+                    "icon": ""
                 }
-                
-                loadTabData(targetTab);
+            },
+            "default_tags": {
+                "mobile": "guest_network",
+                "iot": "iot_network", 
+                "gaming": "gaming_network",
+                "computer": "default",
+                "printer": "office_network"
+            }
+        };
+        
+        this.currentData = {
+            devices: [],
+            tags: [],
+            leases: [],
+            stats: {}
+        };
+        this.refreshInterval = null;
+        this.currentDevice = null;
+        this.confirmCallback = null;
+        this.currentTab = 'overview';
+        
+        this.init();
+    }
+
+    async init() {
+        this.setupEventListeners();
+        
+        // Small delay to ensure DOM is fully rendered
+        setTimeout(() => {
+            this.setupTabs();
+        }, 100);
+        
+        this.startAutoRefresh();
+        
+        // Set device types
+        this.deviceTypes = this.deviceTypesData;
+        
+        // Initial data load
+        await this.loadAllData();
+    }
+
+    setupEventListeners() {
+        // Tab switching
+        document.querySelectorAll('.enhanced-dhcp-tab-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const tabName = e.target.dataset.tab;
+                if (tabName) {
+                    this.switchTab(tabName);
+                }
             });
         });
+
+        // Refresh buttons
+        document.getElementById('refresh-devices')?.addEventListener('click', () => {
+            this.loadDevices();
+        });
+
+        // Device discovery
+        document.getElementById('discover-devices')?.addEventListener('click', () => {
+            this.discoverDevices();
+        });
+
+        // Device search and filter
+        document.getElementById('device-search')?.addEventListener('input', (e) => {
+            this.filterDevices(e.target.value, document.getElementById('device-filter').value);
+        });
+
+        document.getElementById('device-filter')?.addEventListener('change', (e) => {
+            this.filterDevices(document.getElementById('device-search').value, e.target.value);
+        });
+
+        // Tag management
+        document.getElementById('create-tag-btn')?.addEventListener('click', () => {
+            this.showCreateTagForm();
+        });
+
+        document.getElementById('save-tag-btn')?.addEventListener('click', () => {
+            this.saveTag();
+        });
+
+        document.getElementById('cancel-tag-btn')?.addEventListener('click', () => {
+            this.hideCreateTagForm();
+        });
+
+        // Quick assignment
+        document.getElementById('apply-tag-btn')?.addEventListener('click', () => {
+            this.applyQuickTag();
+        });
+
+        document.getElementById('cancel-assign-btn')?.addEventListener('click', () => {
+            this.hideQuickAssign();
+        });
+
+        // Modal handling
+        document.getElementById('confirm-yes')?.addEventListener('click', () => {
+            this.confirmAction();
+        });
+
+        document.getElementById('confirm-no')?.addEventListener('click', () => {
+            this.hideConfirmModal();
+        });
+    }
+
+    setupTabs() {
+        // Set initial active tab
+        this.switchTab('overview');
     }
     
-    async function apiCall(endpoint) {
-        try {
-            const response = await fetch(API_BASE + endpoint);
-            if (!response.ok) {
-                throw new Error("HTTP " + response.status + ": " + response.statusText);
+    ensureTabState() {
+        // Ensure the current tab state is visually maintained
+        if (this.currentTab) {
+            const activeButton = document.querySelector(`[data-tab="${this.currentTab}"]`);
+            const activeContent = document.getElementById(this.currentTab);
+            
+            // Remove all active states
+            document.querySelectorAll('.enhanced-dhcp-tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.enhanced-dhcp-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Re-apply active states
+            if (activeButton) {
+                activeButton.classList.add('active');
             }
-            return await response.json();
+            if (activeContent) {
+                activeContent.classList.add('active');
+            }
+        }
+    }
+
+    switchTab(tabName) {
+        // Update tab buttons with more robust selection
+        document.querySelectorAll('.enhanced-dhcp-tab-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Find and activate the correct tab button
+        const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
+        if (activeButton) {
+            activeButton.classList.add('active');
+        }
+
+        // Update tab content
+        document.querySelectorAll('.enhanced-dhcp-tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        // Find and activate the correct tab content
+        const activeContent = document.getElementById(tabName);
+        if (activeContent) {
+            activeContent.classList.add('active');
+        }
+
+        // Store current tab for reference
+        this.currentTab = tabName;
+
+        // Load data for active tab
+        this.loadTabData(tabName);
+    }
+
+    async loadTabData(tabName) {
+        switch (tabName) {
+            case 'overview':
+                await this.loadOverview();
+                break;
+            case 'devices':
+                await this.loadDevices();
+                break;
+            case 'tags':
+                await this.loadTags();
+                break;
+        }
+    }
+
+    async loadAllData() {
+        try {
+            await Promise.all([
+                this.loadStats(),
+                this.loadDevices(),
+                this.loadTags(),
+                this.loadLeases()
+            ]);
+            this.updateLastUpdateTime();
+            this.ensureTabState();
         } catch (error) {
-            console.error("API call failed:", error);
-            return { success: false, error: error.message };
+            this.showMessage('Error loading data: ' + error.message, 'error');
         }
     }
-    
-    async function loadStats() {
-        const stats = await apiCall("/stats");
-        if (stats.success) {
-            document.getElementById("enhanced-dhcp-total-tags").textContent = stats.data.total_tags || 0;
-            document.getElementById("enhanced-dhcp-total-devices").textContent = stats.data.total_devices || 0;
-            document.getElementById("enhanced-dhcp-online-devices").textContent = stats.data.online_devices || 0;
+
+    async apiRequest(endpoint, method = 'GET', data = null) {
+        const url = this.apiBase + endpoint;
+        const options = {
+            method,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        };
+
+        if (data && method === 'POST') {
+            options.body = new URLSearchParams(data).toString();
+        }
+
+        try {
+            const response = await fetch(url, options);
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.error || 'API request failed');
+            }
+            
+            return result.data;
+        } catch (error) {
+            console.error('API Error:', error);
+            throw error;
         }
     }
-    
-    async function loadLeases() {
-        const loading = document.getElementById("enhanced-dhcp-leases-loading");
-        const table = document.getElementById("enhanced-dhcp-leases-table");
-        const tbody = document.getElementById("enhanced-dhcp-leases-tbody");
-        
-        const leases = await apiCall("/leases");
-        loading.style.display = "none";
-        
-        if (leases.success && leases.data) {
-            tbody.innerHTML = "";
-            leases.data.forEach(lease => {
-                const row = document.createElement("tr");
-                row.innerHTML = "<td>" + (lease.hostname || "Unknown") + "</td>" +
-                               "<td>" + (lease.ipaddr || "-") + "</td>" +
-                               "<td>" + (lease.macaddr || "-") + "</td>" +
-                               "<td>" + new Date(parseInt(lease.timestamp) * 1000).toLocaleString() + "</td>";
-                tbody.appendChild(row);
+
+    async loadStats() {
+        try {
+            const stats = await this.apiRequest('/stats');
+            this.currentData.stats = stats;
+            this.updateStatsDisplay();
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        }
+    }
+
+    async loadDevices() {
+        try {
+            const devices = await this.apiRequest('/devices');
+            this.currentData.devices = devices;
+            this.updateDevicesTable();
+            this.updateQuickAssignTags();
+        } catch (error) {
+            console.error('Error loading devices:', error);
+            this.showMessage('Error loading devices: ' + error.message, 'error');
+        }
+    }
+
+    async loadTags() {
+        try {
+            const tags = await this.apiRequest('/tags');
+            this.currentData.tags = tags;
+            this.updateTagsTable();
+            this.updateQuickAssignTags();
+        } catch (error) {
+            console.error('Error loading tags:', error);
+            this.showMessage('Error loading tags: ' + error.message, 'error');
+        }
+    }
+
+    async loadLeases() {
+        try {
+            const leases = await this.apiRequest('/leases');
+            this.currentData.leases = leases;
+            this.updateLeasesTable();
+        } catch (error) {
+            console.error('Error loading leases:', error);
+        }
+    }
+
+    async loadOverview() {
+        await Promise.all([
+            this.loadStats(),
+            this.loadLeases(),
+            this.loadTags()
+        ]);
+        this.updateTagsSummary();
+        this.ensureTabState();
+    }
+
+    updateStatsDisplay() {
+        const stats = this.currentData.stats;
+        document.getElementById('total-tags').textContent = stats.total_tags || 0;
+        document.getElementById('total-devices').textContent = stats.total_devices || 0;
+        document.getElementById('online-devices').textContent = stats.online_devices || 0;
+    }
+
+    updateDevicesTable() {
+        const tbody = document.querySelector('#devices-table tbody');
+        if (!tbody) return;
+
+        if (this.currentData.devices.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="enhanced-dhcp-loading">No devices found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = this.currentData.devices.map(device => {
+            const deviceType = this.guessDeviceType(device.name, device.mac);
+            const statusClass = device.type === 'lease' ? 'enhanced-dhcp-status-online' : 'enhanced-dhcp-status-offline';
+            const statusText = device.type === 'lease' ? 'Online' : 'Offline';
+            
+            return `
+                <tr data-mac="${device.mac}">
+                    <td>
+                        <div class="enhanced-dhcp-device-type">
+                            <span class="enhanced-dhcp-device-icon">${deviceType.icon}</span>
+                            <span title="${device.mac}">${this.escapeHtml(device.name)}</span>
+                        </div>
+                    </td>
+                    <td><code>${device.mac}</code></td>
+                    <td>${device.ip}</td>
+                    <td class="${statusClass}">${statusText}</td>
+                    <td>
+                        <span class="enhanced-dhcp-tag-badge">${device.tag}</span>
+                    </td>
+                    <td>
+                        <button class="enhanced-dhcp-btn enhanced-dhcp-btn-sm enhanced-dhcp-btn-primary" onclick="dhcpManager.showQuickAssign('${device.mac}', '${this.escapeHtml(device.name)}')">
+                            Assign
+                        </button>
+                        ${device.has_config ? `
+                        <button class="enhanced-dhcp-btn enhanced-dhcp-btn-sm enhanced-dhcp-btn-danger" onclick="dhcpManager.deleteDeviceAssignment('${device.mac}', '${this.escapeHtml(device.name)}')">
+                            Delete
+                        </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    updateTagsTable() {
+        const tbody = document.querySelector('#tags-table tbody');
+        if (!tbody) return;
+
+        // Add default tag row
+        let html = `
+            <tr>
+                <td><strong>default</strong> <em>(built-in)</em></td>
+                <td>Auto</td>
+                <td>Auto</td>
+                <td>Default DHCP settings</td>
+                <td>${this.countDevicesWithTag('default')}</td>
+                <td><em>Cannot delete</em></td>
+            </tr>
+        `;
+
+        // Add custom tags
+        html += this.currentData.tags.map(tag => `
+            <tr>
+                <td><strong>${this.escapeHtml(tag.name)}</strong></td>
+                <td>${tag.gateway || 'Not set'}</td>
+                <td>${tag.dns || 'Not set'}</td>
+                <td>${this.escapeHtml(tag.description || '')}</td>
+                <td>${this.countDevicesWithTag(tag.name)}</td>
+                <td>
+                    <button class="enhanced-dhcp-btn enhanced-dhcp-btn-sm enhanced-dhcp-btn-danger" onclick="dhcpManager.deleteTag('${tag.name}')">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+        tbody.innerHTML = html;
+    }
+
+    updateLeasesTable() {
+        const tbody = document.querySelector('#leases-table tbody');
+        if (!tbody) return;
+
+        if (this.currentData.leases.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="enhanced-dhcp-loading">No active leases</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = this.currentData.leases.map(lease => {
+            const deviceTag = this.getDeviceTag(lease.macaddr);
+            const leaseTime = lease.timestamp === '0' ? 'Static' : new Date(lease.timestamp * 1000).toLocaleString();
+            
+            return `
+                <tr>
+                    <td>${this.escapeHtml(lease.hostname)}</td>
+                    <td>${lease.ipaddr}</td>
+                    <td><code>${lease.macaddr}</code></td>
+                    <td>${leaseTime}</td>
+                    <td><span class="enhanced-dhcp-tag-badge">${deviceTag}</span></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    updateTagsSummary() {
+        const tbody = document.querySelector('#tags-summary-table tbody');
+        if (!tbody) return;
+
+        // Default tag summary
+        let html = `
+            <tr>
+                <td><strong>default</strong></td>
+                <td>Auto</td>
+                <td>Auto</td>
+                <td>${this.countDevicesWithTag('default')}</td>
+            </tr>
+        `;
+
+        // Custom tags summary
+        html += this.currentData.tags.map(tag => `
+            <tr>
+                <td><strong>${this.escapeHtml(tag.name)}</strong></td>
+                <td>${tag.gateway || 'Not set'}</td>
+                <td>${tag.dns || 'Not set'}</td>
+                <td>${this.countDevicesWithTag(tag.name)}</td>
+            </tr>
+        `).join('');
+
+        tbody.innerHTML = html;
+    }
+
+    updateQuickAssignTags() {
+        const select = document.getElementById('quick-assign-tag');
+        if (!select) return;
+
+        select.innerHTML = '<option value="default">default (built-in)</option>' +
+            this.currentData.tags.map(tag => 
+                `<option value="${tag.name}">${this.escapeHtml(tag.name)}</option>`
+            ).join('');
+    }
+
+    filterDevices(searchTerm, filterType) {
+        const tbody = document.querySelector('#devices-table tbody');
+        const rows = tbody?.querySelectorAll('tr') || [];
+
+        rows.forEach(row => {
+            const mac = row.dataset.mac;
+            if (!mac) return;
+
+            const device = this.currentData.devices.find(d => d.mac === mac);
+            if (!device) return;
+
+            const matchesSearch = !searchTerm || 
+                device.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                device.mac.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                device.ip.toLowerCase().includes(searchTerm.toLowerCase());
+
+            const matchesFilter = !filterType || device.type === filterType;
+
+            row.style.display = matchesSearch && matchesFilter ? '' : 'none';
+        });
+    }
+
+    showQuickAssign(mac, name) {
+        this.currentDevice = { mac, name };
+        document.getElementById('quick-assign-device').textContent = `${name} (${mac})`;
+        document.getElementById('quick-assign-name').value = name;
+        document.getElementById('quick-assign-panel').style.display = 'block';
+        document.getElementById('quick-assign-panel').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    hideQuickAssign() {
+        document.getElementById('quick-assign-panel').style.display = 'none';
+        this.currentDevice = null;
+    }
+
+    async applyQuickTag() {
+        if (!this.currentDevice) return;
+
+        const tag = document.getElementById('quick-assign-tag').value;
+        const name = document.getElementById('quick-assign-name').value.trim();
+
+        if (!tag) {
+            this.showMessage('Please select a tag', 'warning');
+            return;
+        }
+
+        try {
+            this.showLoading(true);
+            await this.apiRequest('/apply_tag', 'POST', {
+                mac: this.currentDevice.mac,
+                tag: tag,
+                name: name || this.currentDevice.name
             });
-            table.style.display = "table";
-        } else {
-            tbody.innerHTML = "<tr><td colspan='4'>No active leases found</td></tr>";
-            table.style.display = "table";
+
+            this.showMessage(`Tag "${tag}" applied to device successfully`, 'success');
+            this.hideQuickAssign();
+            await this.loadDevices();
+        } catch (error) {
+            this.showMessage('Error applying tag: ' + error.message, 'error');
+        } finally {
+            this.showLoading(false);
         }
     }
-    
-    async function loadDevices() {
-        const loading = document.getElementById("enhanced-dhcp-devices-loading");
-        const table = document.getElementById("enhanced-dhcp-devices-table");
-        const tbody = document.getElementById("enhanced-dhcp-devices-tbody");
-        
-        const devices = await apiCall("/devices");
-        loading.style.display = "none";
-        
-        if (devices.success && devices.data) {
-            tbody.innerHTML = "";
-            devices.data.forEach(device => {
-                const row = document.createElement("tr");
-                row.innerHTML = "<td>" + (device.name || "Unknown") + "</td>" +
-                               "<td>" + (device.mac || "-") + "</td>" +
-                               "<td>" + (device.ip || "Auto") + "</td>" +
-                               "<td>" + (device.tag || "default") + "</td>" +
-                               "<td>" + (device.type || "unknown") + "</td>" +
-                               "<td><button class='enhanced-dhcp-button'>Edit</button></td>";
-                tbody.appendChild(row);
+
+    showCreateTagForm() {
+        document.getElementById('create-tag-form').style.display = 'block';
+        document.getElementById('tag-name').focus();
+        document.getElementById('create-tag-form').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    hideCreateTagForm() {
+        document.getElementById('create-tag-form').style.display = 'none';
+        document.getElementById('create-tag-form').querySelectorAll('input').forEach(input => {
+            input.value = '';
+        });
+    }
+
+    async saveTag() {
+        const name = document.getElementById('tag-name').value.trim();
+        const gateway = document.getElementById('tag-gateway').value.trim();
+        const dns = document.getElementById('tag-dns').value.trim();
+        const description = document.getElementById('tag-description').value.trim();
+
+        if (!name) {
+            this.showMessage('Tag name is required', 'warning');
+            return;
+        }
+
+        if (!/^[a-zA-Z0-9_-]{2,32}$/.test(name)) {
+            this.showMessage('Invalid tag name. Use 2-32 characters (letters, numbers, underscore, hyphen only)', 'warning');
+            return;
+        }
+
+        try {
+            this.showLoading(true);
+            await this.apiRequest('/create_tag', 'POST', {
+                name,
+                gateway,
+                dns,
+                description
             });
-            table.style.display = "table";
-        } else {
-            tbody.innerHTML = "<tr><td colspan='6'>No devices found</td></tr>";
-            table.style.display = "table";
+
+            this.showMessage(`Tag "${name}" created successfully`, 'success');
+            this.hideCreateTagForm();
+            await this.loadTags();
+        } catch (error) {
+            this.showMessage('Error creating tag: ' + error.message, 'error');
+        } finally {
+            this.showLoading(false);
         }
     }
-    
-    async function loadTags() {
-        const loading = document.getElementById("enhanced-dhcp-tags-loading");
-        const table = document.getElementById("enhanced-dhcp-tags-table");
-        const tbody = document.getElementById("enhanced-dhcp-tags-tbody");
+
+    async deleteTag(tagName) {
+        this.showConfirmModal(
+            'Delete Tag',
+            `Are you sure you want to delete the tag "${tagName}"? This action cannot be undone.`,
+            async () => {
+                try {
+                    this.showLoading(true);
+                    await this.apiRequest('/delete_tag', 'POST', { name: tagName });
+                    this.showMessage(`Tag "${tagName}" deleted successfully`, 'success');
+                    await this.loadTags();
+                } catch (error) {
+                    this.showMessage('Error deleting tag: ' + error.message, 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+        );
+    }
+
+    async discoverDevices() {
+        this.showMessage('Device discovery started...', 'info');
+        // Force refresh of devices to pick up any new ones
+        await this.loadDevices();
+        this.showMessage('Device discovery completed', 'success');
+    }
+
+    async deleteDeviceAssignment(mac, name) {
+        this.showConfirmModal(
+            'Delete Assignment',
+            `Are you sure you want to remove the DHCP tag assignment for "${name}" (${mac})? The device will revert to default settings.`,
+            async () => {
+                try {
+                    this.showLoading(true);
+                    await this.apiRequest('/delete_assignment', 'POST', { 
+                        mac: mac 
+                    });
+                    this.showMessage(`DHCP assignment removed for ${name}`, 'success');
+                    await this.loadDevices();
+                } catch (error) {
+                    this.showMessage('Error removing assignment: ' + error.message, 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+        );
+    }
+
+    // Utility functions
+    guessDeviceType(name, mac) {
+        if (!this.deviceTypes) {
+            return { icon: '', category: 'unknown' };
+        }
+
+        const macPrefix = mac.substring(0, 8).toUpperCase();
+        if (this.deviceTypes.mac_prefixes[macPrefix]) {
+            const vendor = this.deviceTypes.mac_prefixes[macPrefix];
+            // Try to determine category based on vendor
+            for (const [category, info] of Object.entries(this.deviceTypes.device_categories)) {
+                if (info.keywords.some(keyword => vendor.toLowerCase().includes(keyword))) {
+                    return { icon: info.icon, category };
+                }
+            }
+        }
+
+        // Check device name for keywords
+        const lowerName = name.toLowerCase();
+        for (const [category, info] of Object.entries(this.deviceTypes.device_categories)) {
+            if (info.keywords.some(keyword => lowerName.includes(keyword))) {
+                return { icon: info.icon, category };
+            }
+        }
+
+        return { icon: '', category: 'unknown' };
+    }
+
+    getDeviceTag(mac) {
+        const device = this.currentData.devices.find(d => d.mac.toLowerCase() === mac.toLowerCase());
+        return device ? device.tag : 'default';
+    }
+
+    countDevicesWithTag(tag) {
+        return this.currentData.devices.filter(d => 
+            d.tag === tag || (tag === 'default' && (!d.tag || d.tag === 'default'))
+        ).length;
+    }
+
+    showMessage(message, type = 'info') {
+        const container = document.getElementById('status-messages');
+        if (!container) return;
         
-        const tags = await apiCall("/tags");
-        loading.style.display = "none";
-        
-        if (tags.success && tags.data) {
-            tbody.innerHTML = "";
-            tags.data.forEach(tag => {
-                const row = document.createElement("tr");
-                row.innerHTML = "<td>" + (tag.name || "-") + "</td>" +
-                               "<td>" + (tag.description || "-") + "</td>" +
-                               "<td>" + (tag.gateway || "-") + "</td>" +
-                               "<td>" + (tag.dns || "-") + "</td>" +
-                               "<td><button class='enhanced-dhcp-button'>Edit</button></td>";
-                tbody.appendChild(row);
-            });
-            table.style.display = "table";
-        } else {
-            tbody.innerHTML = "<tr><td colspan='5'>No tags configured</td></tr>";
-            table.style.display = "table";
+        const messageEl = document.createElement('div');
+        messageEl.className = `enhanced-dhcp-status-message enhanced-dhcp-status-${type}`;
+        messageEl.textContent = message;
+
+        container.appendChild(messageEl);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (messageEl.parentNode) {
+                messageEl.parentNode.removeChild(messageEl);
+            }
+        }, 5000);
+    }
+
+    showLoading(show) {
+        const modal = document.getElementById('loading-modal');
+        if (modal) {
+            modal.style.display = show ? 'flex' : 'none';
         }
     }
-    
-    function loadTabData(tab) {
-        switch(tab) {
-            case "overview":
-                loadStats();
-                loadLeases();
-                break;
-            case "devices":
-                loadDevices();
-                break;
-            case "tags":
-                loadTags();
-                break;
+
+    showConfirmModal(title, message, callback) {
+        document.getElementById('confirm-title').textContent = title;
+        document.getElementById('confirm-message').textContent = message;
+        document.getElementById('confirm-modal').style.display = 'flex';
+        this.confirmCallback = callback;
+    }
+
+    hideConfirmModal() {
+        document.getElementById('confirm-modal').style.display = 'none';
+        this.confirmCallback = null;
+    }
+
+    async confirmAction() {
+        if (this.confirmCallback) {
+            await this.confirmCallback();
+        }
+        this.hideConfirmModal();
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    updateLastUpdateTime() {
+        // Could display last update time if needed
+    }
+
+    startAutoRefresh() {
+        // Refresh every 30 seconds
+        this.refreshInterval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                this.loadStats();
+                this.loadLeases();
+            }
+        }, 30000);
+    }
+
+    stopAutoRefresh() {
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
         }
     }
-    
-    document.addEventListener("DOMContentLoaded", function() {
-        initTabs();
-        loadTabData("overview");
-    });
-})();
+}
+
+// Initialize the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.dhcpManager = new EnhancedDHCPManager();
+});
+
+// Handle page visibility changes
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && window.dhcpManager) {
+        // Refresh data when page becomes visible
+        window.dhcpManager.loadAllData();
+    }
+});
 </script>
 
 <%+footer%>
