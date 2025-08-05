@@ -215,7 +215,7 @@ copy_package_files() {
 build_ipk() {
     log_info "Building IPK package..."
     
-    local package_file="${PACKAGE_NAME}_${VERSION}-1_all.ipk"
+    local package_file="${PACKAGE_NAME}_${VERSION}_all.ipk"
     
     # Create the IPK package using ar (OpenWrt standard)
     cd "$BUILD_DIR"
@@ -243,180 +243,7 @@ build_ipk() {
     log_success "IPK package built: $package_file ($file_size)"
 }
 
-# Generate documentation
-generate_documentation() {
-    log_info "Generating documentation..."
-    
-    cat > "$OUTPUT_DIR/README.md" << EOF
-# Enhanced DHCP Manager v2.0 - HTML Edition
 
-## Overview
-This is a complete rewrite of the Enhanced DHCP Manager using pure HTML/CSS/JavaScript frontend and shell-based CGI backend, eliminating all LuCI dependencies and compatibility issues.
-
-## Key Improvements in v2.0
-- **No LuCI Dependencies**: Pure HTML frontend eliminates LuCI compatibility issues
-- **Modern Web Technologies**: Responsive design with modern JavaScript
-- **Better Performance**: Lightweight CGI backend with efficient API design
-- **Universal Compatibility**: Works on all OpenWrt versions (19.07+)
-- **Improved Maintainability**: Clean separation of frontend and backend
-
-## Installation
-\`\`\`bash
-opkg install luci-app-enhanced-dhcp_${VERSION}-1_all.ipk
-\`\`\`
-
-## Web Interface
-Access the interface at: http://[router-ip]/enhanced-dhcp/
-
-## Features
-- Real-time DHCP lease monitoring
-- Device auto-discovery and classification
-- DHCP tag management for network policies
-- Responsive mobile-friendly interface
-- No external dependencies
-
-## Architecture
-- **Frontend**: Pure HTML/CSS/JS single-page application
-- **Backend**: Shell-based CGI script (\`/www/cgi-bin/enhanced-dhcp-api\`)
-- **Data Sources**: Direct DHCP leases file parsing + UCI commands
-- **Configuration**: Standard UCI configuration system
-
-## API Endpoints
-- GET /cgi-bin/enhanced-dhcp-api/devices - List all devices
-- GET /cgi-bin/enhanced-dhcp-api/tags - List DHCP tags
-- GET /cgi-bin/enhanced-dhcp-api/leases - Current DHCP leases
-- GET /cgi-bin/enhanced-dhcp-api/stats - System statistics
-- POST /cgi-bin/enhanced-dhcp-api/apply_tag - Apply tag to device
-- POST /cgi-bin/enhanced-dhcp-api/create_tag - Create new tag
-- POST /cgi-bin/enhanced-dhcp-api/delete_tag - Delete tag
-
-## Configuration Files
-- \`/etc/config/enhanced_dhcp\` - Main configuration
-- \`/etc/init.d/enhanced_dhcp\` - Init script
-
-## Compatibility
-- OpenWrt 19.07+
-- All architectures (universal package)
-- No LuCI version dependencies
-
-## Build Information
-- Version: ${VERSION}
-- Build Date: $(date)
-- Package Size: $(du -h "$OUTPUT_DIR/${PACKAGE_NAME}_${VERSION}-1_all.ipk" | cut -f1)
-EOF
-
-    log_success "Documentation generated"
-}
-
-# Generate installation test script
-generate_test_script() {
-    log_info "Generating installation test script..."
-    
-    cat > "$OUTPUT_DIR/test-install.sh" << 'EOF'
-#!/bin/bash
-
-# Enhanced DHCP Manager v2.0 Installation Test Script
-
-set -e
-
-echo "Testing Enhanced DHCP Manager v2.0 Installation..."
-echo "================================================="
-
-# Test 1: Check package installation
-echo "1. Checking package installation..."
-if opkg list-installed | grep -q "luci-app-enhanced-dhcp"; then
-    echo "   ✅ Package is installed"
-else
-    echo "   ❌ Package is not installed"
-    exit 1
-fi
-
-# Test 2: Check web files
-echo "2. Checking web interface files..."
-required_files=(
-    "/www/enhanced-dhcp/index.html"
-    "/www/enhanced-dhcp/style.css"
-    "/www/enhanced-dhcp/script.js"
-    "/www/enhanced-dhcp/device-types.json"
-    "/www/cgi-bin/enhanced-dhcp-api"
-)
-
-for file in "${required_files[@]}"; do
-    if [[ -f "$file" ]]; then
-        echo "   ✅ $file exists"
-    else
-        echo "   ❌ $file missing"
-        exit 1
-    fi
-done
-
-# Test 3: Check CGI script permissions
-echo "3. Checking CGI script permissions..."
-if [[ -x "/www/cgi-bin/enhanced-dhcp-api" ]]; then
-    echo "   ✅ CGI script is executable"
-else
-    echo "   ❌ CGI script is not executable"
-    exit 1
-fi
-
-# Test 4: Check configuration
-echo "4. Checking UCI configuration..."
-if uci show enhanced_dhcp >/dev/null 2>&1; then
-    echo "   ✅ UCI configuration accessible"
-else
-    echo "   ❌ UCI configuration not accessible"
-    exit 1
-fi
-
-# Test 5: Check init script
-echo "5. Checking init script..."
-if /etc/init.d/enhanced_dhcp status >/dev/null 2>&1; then
-    echo "   ✅ Init script functional"
-else
-    echo "   ❌ Init script not functional"
-    exit 1
-fi
-
-# Test 6: Check API endpoint
-echo "6. Testing API endpoint..."
-if command -v curl >/dev/null 2>&1; then
-    if curl -s "http://localhost/cgi-bin/enhanced-dhcp-api/stats" | grep -q "success"; then
-        echo "   ✅ API endpoint responding"
-    else
-        echo "   ❌ API endpoint not responding"
-        exit 1
-    fi
-else
-    echo "   ⚠️  curl not available, skipping API test"
-fi
-
-# Test 7: Check web interface accessibility
-echo "7. Checking web interface files accessibility..."
-web_files=(
-    "/www/enhanced-dhcp/index.html"
-    "/www/enhanced-dhcp/style.css"
-    "/www/enhanced-dhcp/script.js"
-)
-
-for file in "${web_files[@]}"; do
-    if [[ -r "$file" ]]; then
-        echo "   ✅ $file is readable"
-    else
-        echo "   ❌ $file is not readable"
-        exit 1
-    fi
-done
-
-echo ""
-echo "🎉 All tests passed! Enhanced DHCP Manager v2.0 is properly installed."
-echo ""
-echo "Access the web interface at: http://$(uci get network.lan.ipaddr 2>/dev/null || echo "router-ip")/enhanced-dhcp/"
-echo ""
-EOF
-
-    chmod +x "$OUTPUT_DIR/test-install.sh"
-    log_success "Installation test script generated"
-}
 
 # Main build process
 main() {
@@ -438,8 +265,6 @@ main() {
     create_conffiles
     copy_package_files
     build_ipk
-    generate_documentation
-    generate_test_script
     
     echo ""
     log_success "Build completed successfully!"
@@ -448,7 +273,7 @@ main() {
     ls -la "$OUTPUT_DIR/"
     echo ""
     log_info "To install: opkg install $OUTPUT_DIR/${PACKAGE_NAME}_${VERSION}-1_all.ipk"
-    log_info "To test: bash $OUTPUT_DIR/test-install.sh"
+    log_info "To test: ./test.sh"
     log_info "Web interface: http://[router-ip]/enhanced-dhcp/"
 }
 

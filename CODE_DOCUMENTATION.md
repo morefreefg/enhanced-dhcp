@@ -232,7 +232,7 @@ config logging 'logging'
 ## Testing and Deployment
 
 ### Automated Testing
-The `build.sh` script generates `test-install.sh` which validates:
+The `build.sh` script generates validation scripts, and `test.sh` provides remote testing which validates:
 1. Package installation status
 2. Web interface file existence
 3. CGI script permissions
